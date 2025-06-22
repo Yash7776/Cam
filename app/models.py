@@ -333,3 +333,37 @@ class Project(models.Model):
             }
         )
         return unique_id.get_next_id()
+    
+class Project_ip_camera_details_all(models.Model):
+    camera_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
+    location_name = models.CharField(max_length=100)
+    ip_link = models.CharField(max_length=300)
+    user_name = models.CharField(max_length=100)
+    password = models.CharField(max_length=100)
+    status = models.IntegerField(default=1)  # 1=active, 0=inactive
+    last_connected = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return self.location_name
+
+    @classmethod
+    def get_or_assign_camera_id(cls, location_name):
+        existing_camera = cls.objects.filter(location_name=location_name).first()
+        if existing_camera:
+            return existing_camera.camera_id
+        unique_id, _ = UniqueIdHeaderAll.objects.get_or_create(
+            table_name='project_ip_camera_details_all',
+            id_for='camera_id',
+            defaults={
+                'prefix': 'CAM',
+                'last_id': '',
+                'created_on': timezone.now(),
+                'modified_on': timezone.now()
+            }
+        )
+        return unique_id.get_next_id()
+
+    def save(self, *args, **kwargs):
+        if not self.camera_id:
+            self.camera_id = self.get_or_assign_camera_id(self.location_name)
+        super().save(*args, **kwargs)

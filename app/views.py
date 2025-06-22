@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.contrib.auth.hashers import check_password
-from .models import Department, User_header_all, Project
+from .models import Department, Project_ip_camera_details_all, User_header_all, Project
 import logging
 from django.http import HttpResponse
 
@@ -81,10 +81,15 @@ def dashboard(request, dept_name):
     # Fetch projects belonging to the user's department
     projects = Project.objects.filter(department=department).order_by('project_name')
 
+    # Ip Camera
+    cameras = Project_ip_camera_details_all.objects.all()
+
+
     return render(request, 'dashboard.html', {
         'department': department,
         'user_name': request.session.get('user_name', 'Guest'),
-        'projects': projects  # Pass projects to the template
+        'projects': projects,  # Pass projects to the template
+        'cameras': cameras
     })
     
 def project_detail(request, dept_name, project_id):
@@ -92,6 +97,9 @@ def project_detail(request, dept_name, project_id):
     current_project = get_object_or_404(Project, project_id=project_id, department=department)
     
     projects = Project.objects.filter(department=department)
+
+    # Ip Camera
+    cameras = Project_ip_camera_details_all.objects.all()
     
     context = {
         'department': department,
@@ -99,5 +107,6 @@ def project_detail(request, dept_name, project_id):
         'projects': projects,
         'user_name': request.session.get('user_name'),
         'project_selected': True,
+        'cameras': cameras
     }
     return render(request, 'dashboard.html', context)

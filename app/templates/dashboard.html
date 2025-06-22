@@ -536,7 +536,7 @@
   .video-popup {
     background: #ffffff;
     padding: 32px;
-    width: 600px;
+    width: 400px;
     max-height: 80vh;
     overflow-y: auto;
     border-radius: 16px;
@@ -569,6 +569,23 @@
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
+  .no-feed-banner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            z-index: 10;
+            display: none;
+        }
+        .no-feed-banner img {
+            max-width: 50px;
+            margin-bottom: 10px;
+        }  
 </style>
 </head>
 <body>
@@ -604,9 +621,10 @@
           </li>
           <li class="disabled-item"><div class="item-left"><i class="fas fa-file"></i><span class="label">GIS & Land</span></div><i class="fas fa-chevron-right"></i></li>
           <!-- IPCamera: Modified Views item to trigger video popup -->
-          <li class="disabled-item video-popup-trigger">
-            <div class="item-left" onclick="showVideoPopup()">
-              <i class="fas fa-map"></i><span class="label">Views</span>
+          <li class="disabled-item video-popup-trigger" onclick="showVideoPopup()">
+
+            <div class="item-left" >
+              <i class="fas fa-map"></i><span class="label">View Cameras</span>
             </div>
             <i class="fas fa-chevron-right"></i>
           </li>
@@ -663,12 +681,37 @@
     <!-- IPCamera: New video popup overlay -->
     <div id="video-popup-overlay" class="video-popup-overlay">
       <div class="video-popup">
-        <h3><i class="fas fa-video" style="margin-right: 8px; color: #3b1a6b;"></i>Live Camera Feed</h3>
-        <video controls autoplay loop>
-          <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
-        <button class="close-btn">Close</button>
+        <h3><i class="fas fa-video" style="margin-right:8px; color: #3b1a6b;"></i>Live Camera Feed
+          <button class="close-btn btn btn-dark text-right " style="background-color: #3b1a6b;">Close</button>
+        </h3>
+
+        {% for cam in cameras %}
+            <div class="col">
+                <div class="card h-100 mb-3">
+                    <div class="position-relative">
+                        <video id="video{{ cam.camera_id }}" class="card-img-top" width="100%" controls autoplay muted></video>
+                        <div id="noFeedBanner{{ cam.camera_id }}" class="no-feed-banner">
+                            <!-- <img src="https://cdn-icons-png.flaticon.com/512/1146/1146867.png" alt="No Feed Icon"> -->
+                            <div>No Feed Available</div>
+                        </div>
+                        <span id="deleteIcon{{ cam.camera_id }}" class="position-absolute top-0 end-0 m-2 btn btn-sm btn-danger d-none" onclick="openDeleteModal('{{ cam.camera_id }}', '{{ cam.location_name }}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
+                                <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528M8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5"/>
+                            </svg>
+                        </span>
+                        <span class="position-absolute top-100 start-0 translate-middle m-2 badge {% if cam.status == 1 %}bg-success{% else %}bg-danger{% endif %}">
+                            {% if cam.status == 1 %}Online{% else %}Offline{% endif %}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title text-center">{{ cam.location_name }}</h5>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">No cameras available.</p>
+            {% endfor %}
+
       </div>
     </div>
   </div>
@@ -690,6 +733,128 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+ <script>
+        // HLS.js video streaming and no-feed banner handling
+        {% for cam in cameras %}
+            (function() {
+                const video = document.getElementById("video{{ cam.camera_id }}");
+                const noFeedBanner = document.getElementById("noFeedBanner{{ cam.camera_id }}");
+                const url = "/media/stream/cam_{{ cam.camera_id }}.m3u8";
+                let hls = null;
+                let isPlaying = false;
+
+                // Function to attempt loading the stream
+                function loadStream() {
+                    if (Hls.isSupported()) {
+                        if (hls) {
+                            hls.destroy(); // Clean up previous instance
+                        }
+                        hls = new Hls();
+                        hls.loadSource(url);
+                        hls.attachMedia(video);
+                        hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+                            video.play().catch(() => {
+                                noFeedBanner.style.display = 'block';
+                            });
+                        });
+                        hls.on(Hls.Events.ERROR, (event, data) => {
+                            if (data.fatal) {
+                                noFeedBanner.style.display = 'block';
+                                isPlaying = false;
+                            }
+                        });
+                    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+                        video.src = url;
+                        video.play().catch(() => {
+                            noFeedBanner.style.display = 'block';
+                        });
+                    }
+                }
+
+                // Check video status and retry if not playing
+                function checkVideoStatus() {
+                    if (video.readyState >= 3 && !video.paused) {
+                        noFeedBanner.style.display = 'none';
+                        isPlaying = true;
+                    } else {
+                        noFeedBanner.style.display = 'block';
+                        isPlaying = false;
+                        loadStream(); // Retry loading the stream
+                    }
+                }
+
+                // Initial stream load
+                loadStream();
+
+                // Check video status every 3 seconds
+                setInterval(checkVideoStatus, 3000);
+
+                // Update status on playing
+                video.addEventListener('playing', () => {
+                    noFeedBanner.style.display = 'none';
+                    isPlaying = true;
+                });
+
+                // Handle errors or stalls
+                video.addEventListener('error', () => {
+                    noFeedBanner.style.display = 'block';
+                    isPlaying = false;
+                });
+
+                video.addEventListener('stalled', () => {
+                    noFeedBanner.style.display = 'block';
+                    isPlaying = false;
+                });
+            })();
+        {% endfor %}
+
+        // Toggle delete mode
+        function toggleDeleteMode() {
+            const deleteIcons = document.querySelectorAll('[id^="deleteIcon"]');
+            const removeBtn = document.getElementById('removeIpBtn');
+            const doneBtn = document.getElementById('doneBtn');
+            deleteIcons.forEach(icon => icon.classList.toggle('d-none'));
+            removeBtn.classList.toggle('d-none');
+            doneBtn.classList.toggle('d-none');
+        }
+
+        // Open delete confirmation modal
+        function openDeleteModal(cameraId, cameraName) {
+            const modal = new bootstrap.Modal(document.getElementById('deleteCameraModal'));
+            document.getElementById('deleteConfirmationText').innerText = 
+                `Are you sure you want to delete ${cameraName}?`;
+            document.getElementById('confirmDeleteBtn').onclick = function() {
+                window.location.href = `/delete_camera/${encodeURIComponent(cameraId)}/`;
+            };
+            modal.show();
+        }
+
+        // Handle add camera form submission
+        document.getElementById('addCameraForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = this;
+            const errorMessage = document.getElementById('errorMessage');
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload(); // Still needed for new cameras
+                } else {
+                    errorMessage.classList.remove('d-none');
+                    errorMessage.innerText = data.error;
+                }
+            })
+            .catch(() => {
+                errorMessage.classList.remove('d-none');
+                errorMessage.innerText = 'An error occurred. Please try again.';
+            });
+        });
+    </script>
 <script>
   // 🗺️ Initialize map if available
   if (document.getElementById('map')) {

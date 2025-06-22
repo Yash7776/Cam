@@ -82,14 +82,14 @@ def dashboard(request, dept_name):
     projects = Project.objects.filter(department=department).order_by('project_name')
 
     # Ip Camera
-    cameras = Project_ip_camera_details_all.objects.all()
+    # cameras = Project_ip_camera_details_all.objects.all()
 
 
     return render(request, 'dashboard.html', {
         'department': department,
         'user_name': request.session.get('user_name', 'Guest'),
         'projects': projects,  # Pass projects to the template
-        'cameras': cameras
+        # 'cameras': cameras
     })
     
 def project_detail(request, dept_name, project_id):
@@ -99,7 +99,15 @@ def project_detail(request, dept_name, project_id):
     projects = Project.objects.filter(department=department)
 
     # Ip Camera
-    cameras = Project_ip_camera_details_all.objects.all()
+    ipproject = get_object_or_404(Project, project_id=project_id)
+    print("IPProject",ipproject)
+    cameras = Project_ip_camera_details_all.objects.filter(project=ipproject)
+    print("CAMERASYAS",cameras)
+
+    # Start Cameras Agin
+    from .streaming import start_ffmpeg_stream
+    start_ffmpeg_stream()
+
     
     context = {
         'department': department,

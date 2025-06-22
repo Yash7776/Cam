@@ -335,6 +335,7 @@ class Project(models.Model):
         return unique_id.get_next_id()
     
 class Project_ip_camera_details_all(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="cameras")  # NEWccc
     camera_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
     location_name = models.CharField(max_length=100)
     ip_link = models.CharField(max_length=300)

@@ -620,14 +620,19 @@
             <i class="fas fa-chevron-right"></i>
           </li>
           <li class="disabled-item"><div class="item-left"><i class="fas fa-file"></i><span class="label">GIS & Land</span></div><i class="fas fa-chevron-right"></i></li>
+          
           <!-- IPCamera: Modified Views item to trigger video popup -->
+           {% if cameras %}
           <li class="disabled-item video-popup-trigger" onclick="showVideoPopup()">
-
             <div class="item-left" >
-              <i class="fas fa-map"></i><span class="label">View Cameras</span>
+              <i class="fas fa-camera"></i><span class="label">View Cameras</span>
             </div>
             <i class="fas fa-chevron-right"></i>
           </li>
+          {% endif %}
+
+
+
           <li class="disabled-item"><div class="item-left"><i class="fas fa-warehouse"></i><span class="label">Assets</span></div><i class="fas fa-chevron-right"></i></li>
           <li class="disabled-item flyout-trigger" data-flyout="clearance">
             <div class="item-left"><i class="fas fa-shield-alt"></i><span class="label">Clearance</span></div>

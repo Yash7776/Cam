@@ -516,9 +516,60 @@
   .submenu-item:last-child {
     border-bottom: none;
   }
+
+  /* IPCamera: Styles for video popup */
+  .video-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    justify-content: flex-end;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 10001;
+    backdrop-filter: blur(3px);
+    transition: opacity 0.3s ease;
+  }
+
+  .video-popup {
+    background: #ffffff;
+    padding: 32px;
+    width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+    font-family: 'Poppins', sans-serif;
+    transform: translateX(20px);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    position: relative;
+    margin-right: 20px;
+  }
+
+  .video-popup-overlay[style*="display: flex"] .video-popup {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  .video-popup h3 {
+    margin-bottom: 20px;
+    color: #3b1a6b;
+    font-size: 22px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .video-popup video {
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
 </style>
-
-
 </head>
 <body>
   <nav class="navbar shadow-sm">
@@ -552,7 +603,13 @@
             <i class="fas fa-chevron-right"></i>
           </li>
           <li class="disabled-item"><div class="item-left"><i class="fas fa-file"></i><span class="label">GIS & Land</span></div><i class="fas fa-chevron-right"></i></li>
-          <li class="disabled-item"><div class="item-left"><i class="fas fa-map"></i><span class="label">Views</span></div><i class="fas fa-chevron-right"></i></li>
+          <!-- IPCamera: Modified Views item to trigger video popup -->
+          <li class="disabled-item video-popup-trigger">
+            <div class="item-left" onclick="showVideoPopup()">
+              <i class="fas fa-map"></i><span class="label">Views</span>
+            </div>
+            <i class="fas fa-chevron-right"></i>
+          </li>
           <li class="disabled-item"><div class="item-left"><i class="fas fa-warehouse"></i><span class="label">Assets</span></div><i class="fas fa-chevron-right"></i></li>
           <li class="disabled-item flyout-trigger" data-flyout="clearance">
             <div class="item-left"><i class="fas fa-shield-alt"></i><span class="label">Clearance</span></div>
@@ -600,6 +657,17 @@
             </tr>
           </tbody>
         </table>
+        <button class="close-btn">Close</button>
+      </div>
+    </div>
+    <!-- IPCamera: New video popup overlay -->
+    <div id="video-popup-overlay" class="video-popup-overlay">
+      <div class="video-popup">
+        <h3><i class="fas fa-video" style="margin-right: 8px; color: #3b1a6b;"></i>Live Camera Feed</h3>
+        <video controls autoplay loop>
+          <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
         <button class="close-btn">Close</button>
       </div>
     </div>
@@ -664,7 +732,7 @@
 
     if (mapDiv) {
       mapDiv.style.left = isCollapsed ? "70px" : "300px";
-      mapDiv.style.width = isCollapsed ? "calc(100% - 70px)" : "calc(100% - 300px)";
+      mapDiv.style.width = isCollapsed ? "calc(100% - 300px)" : "calc(100% - 300px)";
     }
   }
 
@@ -685,6 +753,10 @@
 
     if (document.getElementById('popup-overlay').style.display === 'flex') {
       centerPopup();
+    }
+
+    if (document.getElementById('video-popup-overlay').style.display === 'flex') {
+      positionVideoPopup();
     }
 
     setTimeout(updatePopupPosition, 300);
@@ -877,6 +949,36 @@
       overlay.style.display = 'none';
     }, 200);
   });
+
+  // IPCamera: Show video popup
+  function showVideoPopup() {
+    const overlay = document.getElementById('video-popup-overlay');
+    overlay.style.display = 'flex';
+    overlay.style.opacity = 0;
+    requestAnimationFrame(() => {
+      overlay.style.transition = 'opacity 0.2s ease';
+      overlay.style.opacity = 1;
+    });
+    positionVideoPopup();
+  }
+
+  // IPCamera: Close video popup
+  document.querySelector('#video-popup-overlay .close-btn')?.addEventListener('click', () => {
+    const overlay = document.getElementById('video-popup-overlay');
+    overlay.style.opacity = 0;
+    setTimeout(() => {
+      overlay.style.display = 'none';
+    }, 200);
+  });
+
+  // IPCamera: Position video popup
+  function positionVideoPopup() {
+    const overlay = document.getElementById('video-popup-overlay');
+    const sidebar = document.getElementById('sidebar');
+    const collapsed = sidebar.classList.contains('collapsed');
+    const videoPopup = document.querySelector('.video-popup');
+    videoPopup.style.marginRight = '20px'; // Ensure right-aligned with margin
+  }
 
   // Update popup layout when sidebar changes
   function updatePopupPosition() {

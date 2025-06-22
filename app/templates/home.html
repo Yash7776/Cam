@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load static %}
+
+<style>
+  .content-wrapper {
+    position: relative;
+    height: calc(100vh - 100px);
+    /* Adjusted for navbar (60px) + control bar (30px) + footer (10px) */
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    margin-bottom: 0;
+  }
+
+  .layout {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .main-content {
+    position: relative;
+    /* height: 100%; */
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .map-container {
+    position: relative;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  #maharashtra-map {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+  }
+
+  .layer-control {
+    position: absolute;
+    top: 10px;
+    left: 50px;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 1050;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+  }
+
+  .layer-control label {
+    font-weight: bold;
+    cursor: pointer;
+    color: #1a3a5a;
+    margin-bottom: 5px;
+    display: block;
+  }
+
+  .layer-control div {
+    margin-bottom: 5px;
+  }
+
+  .layer-control input[type="radio"] {
+    margin-right: 5px;
+  }
+
+  .layer-options {
+    display: none;
+    margin-top: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .layer-control:hover .layer-options {
+    display: block;
+    opacity: 1;
+  }
+
+  .footer {
+    position: relative;
+    z-index: 1100;
+    /* Ensure footer is above the map */
+    margin: 0;
+    padding: 0.5rem;
+    /* Match the existing footer padding */
+  }
+</style>
+
+<div class="map-container">
+  <!-- Small button/area to hover -->
+  <div class="layer-control">
+    <label>Data Layers</label>
+    <div class="layer-options">
+      <div><input type="radio" name="mapLayer" id="topologyLayer"> Topology</div>
+      <div><input type="radio" name="mapLayer" id="osmLayer" checked> OpenStreetMap</div>
+      <div><input type="radio" name="mapLayer" id="satelliteLayer"> Satellite</div>
+    </div>
+  </div>
+
+  <div id="maharashtra-map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endblock content %}

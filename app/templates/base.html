@@ -1,0 +1,681 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Monarch</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{% static 'images/M_Logo.jpeg' %}"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <script
+      src="https://kit.fontawesome.com/366a5ba087.js"
+      crossorigin="anonymous"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{% static 'css/base_style.css' %}" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT31bYVR4WvuxpN1uWHIP1H9ZOZ-hGroQGhJQ&s"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <script
+      src="https://kit.fontawesome.com/366a5ba087.js"
+      crossorigin="anonymous"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{% static 'css/base_style.css' %}" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+
+  <body data-selected-project="{{ selected_project_id|default:'' }}">
+    <!-- Navbar -->
+    <nav class="navbar shadow-sm">
+      <div
+        class="container-fluid d-flex align-items-center justify-content-between"
+      >
+        <a class="navbar-brand d-flex align-items-center gap-2" href="/home/">
+          <div class="logo-container">
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT31bYVR4WvuxpN1uWHIP1H9ZOZ-hGroQGhJQ&s"
+              alt="Monarch Logo"
+              class="logo-img"
+            />
+          </div>
+        </a>
+        <div class="navbar-title">
+            <h2 class="company-name">Yash</h2>
+          </span>
+        </div>
+        <div
+          class="dropdown ms-auto"
+          style="position: relative; z-index: 1100"
+          data-bs-toggle="modal"
+          data-bs-target="#profileModal1"
+        >
+          <a
+            href="#"
+            class="d-flex align-items-center text-white text-decoration-none"
+            id="userDropdown"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            <img
+              src="{% static 'images/profile_icon.png' %}"
+              alt="Profile"
+              width="30"
+              height="30"
+              class="rounded-circle me-2"
+            />
+            <span
+              data-bs-target="#exampleModal"
+              class="me-2 d-flex flex-column align-items-start"
+            >
+              <span>Guest</span>
+              <div class="m-auto">
+                <span style="font-size: 0.8em; color: #ccc">No Profile</span>
+              </div>
+            </span>
+          </a>
+        </div>
+      </div>
+      <!-- Profile Modal -->
+      <div
+        class="modal fade"
+        id="profileModal1"
+        tabindex="-1"
+        aria-labelledby="profileModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+          <div class="modal-content">
+            <div class="modal-header1 text-end">
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <div class="profile-img">
+                <img
+                  src="{% static 'images/profile_icon.png' %}"
+                  alt="Profile"
+                  width="80"
+                  height="80"
+                  class="rounded-circle me-2"
+                />
+              </div>
+              <h5 class="fw-bold text-black">
+                {{ user_name|default:"Guest" }}
+              </h5>
+              <p class="text-muted small fw-bold">
+                {{
+                user_designation|default:"User"}},{{selected_profile_name|default:"No
+                Profile" }}
+              </p>
+              <a href="#" class="edit text-decoration-none disabled">Profile</a>
+              <a
+                href="{% url 'logout' %}"
+                class="text-danger text-decoration-none logout-link"
+                >Logout</a
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Loading Spinner
+    <div id="page-loader">
+        <div class="spinner"></div>
+    </div> -->
+
+    <!-- Custom Control Bar -->
+    <div class="control-bar">
+      <div
+        class="d-flex justify-content-center align-items-center"
+        style="margin-left: 25px"
+      >
+        <!-- Operation Icon -->
+
+        <h5 class="fw-bold text-black ms-2 mb-0">Configurations</h5>
+      </div>
+    </div>
+    <div class="content-wrapper">
+      <div class="layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+          <div class="sidebar-toggler" title="Toggle sidebar">
+            <i class="fas fa-angle-left"></i>
+          </div>
+          <ul class="sidebar-menu">
+            <li
+              class="menu-item {% if request.session.selected_option == 'configurations' %}disabled{% endif %}"
+            >
+              <a href="#" class="menu-toggle">
+                <img
+                  class="sidebar_icon"
+                  src="{% static 'sidebar_images/home.svg' %}"
+                  alt="Sidebar Icon"
+                  class="sidebar-logo"
+                />
+                <div class="menu-text">
+                  <strong>Projects</strong>
+                  <small class="strong">View all projects</small>
+                </div>
+                <i class="fas fa-chevron-right menu-arrow"></i>
+              </a>
+              <ul class="submenu">
+                {% for project in all_projects %}
+                <li>
+                  {% if project.display_order == 1 or project.display_order == 2
+                  or project.display_order == 3 %}
+                  <a
+                    href="{% url 'select_project' %}?project_id={{ project.project_id }}"
+                    class="project-link {% if selected_project_id == project.project_id %}active{% endif %}"
+                    data-project="{{ project.project_id|default:'unknown' }}"
+                    data-display-order="{{ project.display_order|default:'0' }}"
+                    style="color: #1e3a8a; font-weight: bold"
+                  >
+                    <i class="fas fa-folder-open text-white mr-2"></i>{{
+                    project.project_name|default:'Unknown Project' }}
+                  </a>
+                  {% else %}
+                  <a
+                    href="#"
+                    class="project-link {% if selected_project_id == project.project_id %}active{% endif %}"
+                    data-project="{{ project.project_id|default:'unknown' }}"
+                    data-display-order="{{ project.display_order|default:'0' }}"
+                    style="color: #1e3a8a; font-weight: bold"
+                  >
+                    <i class="fas fa-folder-open text-white mr-2"></i>{{
+                    project.project_name|default:'Unknown Project' }}
+                  </a>
+                  {% endif %}
+                </li>
+                {% empty %}
+                <li>
+                  <a href="#" style="color: #1e3a8a">No projects available</a>
+                </li>
+                {% endfor %}
+              </ul>
+            </li>
+
+            <li class="menu-item">
+              <a href="#" class="menu-toggle">
+                <img
+                  class="sidebar_icon"
+                  src="{% static 'sidebar_images/tender_doc.svg' %}"
+                  alt="Sidebar Icon"
+                  class="sidebar-logo"
+                />
+                <div class="menu-text">
+                  <strong>Tenders</strong>
+                </div>
+                <i class="fas fa-chevron-right menu-arrow"></i>
+              </a>
+            </li>
+            <li class="menu-item">
+              <a href="/stream" class="menu-toggle">
+                <img
+                  class="sidebar_icon"
+                  src="{% static 'sidebar_images/cctv.svg' %}"
+                  alt="Sidebar Icon"
+                  class="sidebar-logo"
+                />
+                <div class="menu-text">
+                  <strong>IP Camera's</strong>
+                </div>
+                <i class="fas fa-chevron-right menu-arrow"></i>
+              </a>
+            </li>
+
+            <li
+              class="menu-item {% if not selected_project_id %}disabled{% endif %}"
+              id="gis-menu"
+            >
+              <a
+                href="http://103.167.184.133:8021/"
+                target="_blank"
+                class="gis-link"
+                data-gis="gis1"
+                data-url="http://103.167.184.133:8021/"
+              >
+                <img
+                  class="sidebar_icon"
+                  src="{% static 'sidebar_images/gis.svg' %}"
+                  alt="GIS1 Icon"
+                />
+                <div class="menu-text"><strong>GIS & Land</strong></div>
+                <i class="fas fa-chevron-right menu-arrow"></i>
+              </a>
+            </li>
+
+            <li
+              class="menu-item {% if not selected_project_id %}disabled{% endif %}"
+              id="survey-menu"
+            >
+              <a
+                href="{% if selected_project_id and selected_project_name %}
+                                    https://mounarchtech.com/cidco/admin/property.php?project_id={{ selected_project_id }}&project_name={{ selected_project_name|urlencode }}&type={% if request.session.is_platform_owner %}1{% else %}2{% endif %}
+                                 {% else %}#{% endif %}"
+                class="gis-link survey-properties-link"
+                data-gis="gis1"
+                target="_blank"
+                data-url="{% if selected_project_id and selected_project_name %}
+                                        https://mounarchtech.com/cidco/admin/property.php?project_id={{ selected_project_id }}&project_name={{ selected_project_name|urlencode }}&type={% if request.session.is_platform_owner %}1{% else %}2{% endif %}
+                                     {% else %}#{% endif %}"
+              >
+                <img
+                  class="sidebar_icon"
+                  src="{% static 'sidebar_images/survey.svg' %}"
+                  alt="Survey Icon"
+                />
+                <div class="menu-text"><strong>Survey Properties</strong></div>
+                <i class="fas fa-chevron-right menu-arrow"></i>
+              </a>
+            </li>
+
+            <li
+              class="menu-item {% if not selected_project_id %}disabled{% endif %}"
+              id="field-survey"
+            >
+              {% if request.session.is_platform_owner %}
+              <!-- Platform Owner: Village Data Entry Link -->
+              <a
+                href="https://shaktipeeth.staffhandler.com/ngsp-survey/village-survey"
+                target="_blank"
+                class="gis-link"
+                data-gis="gis1"
+                data-url="https://shaktipeeth.staffhandler.com/ngsp-survey/village-survey"
+              >
+                <img
+                  class="sidebar_icon"
+                  src="{% static 'sidebar_images/survey.svg' %}"
+                  alt="Survey Icon"
+                />
+                <div class="menu-text"><strong>Field Survey</strong></div>
+                <i class="fas fa-chevron-right menu-arrow"></i>
+              </a>
+              {% else %}
+              <!-- Department Owner: Detail Report Link -->
+              <a
+                href="https://shaktipeeth.staffhandler.com/detail-report"
+                target="_blank"
+                class="gis-link"
+                data-gis="gis1"
+                data-url="https://shaktipeeth.staffhandler.com/detail-report"
+              >
+                <img
+                  class="sidebar_icon"
+                  src="{% static 'sidebar_images/survey.svg' %}"
+                  alt="Survey Icon"
+                />
+                <div class="menu-text"><strong>Field Survey</strong></div>
+                <i class="fas fa-chevron-right menu-arrow"></i>
+              </a>
+              {% endif %}
+            </li>
+            <li
+              class="menu-item {% if not selected_project_id %}disabled{% endif %}"
+              id="assets-menu"
+            >
+              <a href="{% url 'assets' %}" class="menu-toggle">
+                <img
+                  class="sidebar_icon"
+                  src="{% static 'sidebar_images/assets.svg' %}"
+                  alt="Assets Icon"
+                  class="sidebar-logo"
+                />
+                <div class="menu-text">
+                  <strong>Assets</strong>
+                </div>
+                <i class="fas fa-chevron-right menu-arrow"></i>
+              </a>
+            </li>
+            <li
+              class="menu-item {% if not selected_project_id %}disabled{% endif %}"
+              id="3d-view-menu"
+            >
+              <a href="#" class="menu-toggle">
+                <img
+                  class="sidebar_icon"
+                  src="{% static 'sidebar_images/3d.svg' %}"
+                  alt="3D View Icon"
+                  class="sidebar-logo"
+                />
+                <div class="menu-text">
+                  <strong>3D View</strong>
+                </div>
+                <i class="fas fa-chevron-right menu-arrow"></i>
+              </a>
+            </li>
+            <li
+              class="menu-item {% if request.session.selected_option == 'configurations' %}disabled{% endif %}"
+            >
+              <a href="#" class="menu-toggle">
+                <img
+                  class="sidebar_icon"
+                  src="{% static 'sidebar_images/progress.svg' %}"
+                  alt="Progress Icon"
+                  class="sidebar-logo"
+                />
+                <div class="menu-text">
+                  <strong>Progress</strong>
+                  <small class="strong">Project progress</small>
+                </div>
+                <i class="fas fa-chevron-right menu-arrow"></i>
+              </a>
+              <ul class="submenu">
+                <li>
+                  <a href="#" style="color: #1e40af; font-weight: bold"
+                    ><i class="fas fa-clipboard-check"></i>RFI</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #f97316; font-weight: bold"
+                    ><i class="fas fa-cubes"></i>Quantities</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #dc2626; font-weight: bold"
+                    ><i class="fas fa-flag-checkered"></i>Mile Stone (Alert)</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #15803d; font-weight: bold"
+                    ><i class="fas fa-flask"></i>Quality (Tests)</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #7c3aed; font-weight: bold"
+                    ><i class="fas fa-hard-hat"></i>Site Visit & Inspection</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #0e7490; font-weight: bold"
+                    ><i class="fas fa-link"></i>Chainage</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li
+              class="menu-item {% if request.session.selected_option == 'configurations' %}disabled{% endif %}"
+            >
+              <a href="#" class="menu-toggle">
+                <img
+                  class="sidebar_icon"
+                  src="{% static 'sidebar_images/billing.svg' %}"
+                  alt="Billing Icon"
+                  class="sidebar-logo"
+                />
+                <div class="menu-text">
+                  <strong>Billing</strong>
+                  <small class="strong">Billing details</small>
+                </div>
+                <i class="fas fa-chevron-right menu-arrow"></i>
+              </a>
+              <ul class="submenu">
+                <li>
+                  <a href="#" style="color: #1e40af; font-weight: bold"
+                    ><i class="fas fa-list-ol"></i>Schedule H</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li
+              class="menu-item {% if request.session.selected_option == 'configurations' %}disabled{% endif %}"
+            >
+              <a href="#" class="menu-toggle">
+                <img
+                  class="sidebar_icon"
+                  src="{% static 'sidebar_images/reports.svg' %}"
+                  alt="Reports Icon"
+                  class="sidebar-logo"
+                />
+                <div class="menu-text">
+                  <strong>Reports</strong>
+                  <small class="strong">View reports</small>
+                </div>
+                <i class="fas fa-chevron-right menu-arrow"></i>
+              </a>
+              <ul class="submenu">
+                <li>
+                  <a href="#" style="color: #1e40af; font-weight: bold"
+                    ><i class="fas fa-map-marked-alt"></i>LA Status Report</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #f97316; font-weight: bold"
+                    ><i class="fas fa-money-check"></i>Award Disbursement
+                    Report</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #dc2626; font-weight: bold"
+                    ><i class="fas fa-calendar-alt"></i>Monthly Progress
+                    Report</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #15803d; font-weight: bold"
+                    ><i class="fas fa-coins"></i>Financial Progress Report</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #7c3aed; font-weight: bold"
+                    ><i class="fas fa-ruler-combined"></i>Physical Progress
+                    Report</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #0e7490; font-weight: bold"
+                    ><i class="fas fa-car-crash"></i>Accident Report</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #f59e0b; font-weight: bold"
+                    ><i class="fas fa-leaf"></i>EIA Compliance Report</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li
+              class="menu-item {% if request.session.selected_option == 'configurations' %}disabled{% endif %}"
+            >
+              <a href="#" class="menu-toggle">
+                <img
+                  class="sidebar_icon"
+                  src="{% static 'sidebar_images/maintenance.svg' %}"
+                  alt="Maintenance Icon"
+                  class="sidebar-logo"
+                />
+                <div class="menu-text">
+                  <strong>Maintenance</strong>
+                  <small class="strong">Maintenance details</small>
+                </div>
+                <i class="fas fa-chevron-right menu-arrow"></i>
+              </a>
+              <ul class="submenu">
+                <li>
+                  <a href="#" style="color: #1e40af; font-weight: bold"
+                    ><i class="fas fa-calendar"></i>Schedule</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #f97316; font-weight: bold"
+                    ><i class="fas fa-calendar-check"></i>1st Year</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #dc2626; font-weight: bold"
+                    ><i class="fas fa-calendar-check"></i>2nd Year</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #15803d; font-weight: bold"
+                    ><i class="fas fa-calendar-check"></i>3rd Year</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #7c3aed; font-weight: bold"
+                    ><i class="fas fa-calendar-check"></i>4th Year</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #0e7490; font-weight: bold"
+                    ><i class="fas fa-calendar-check"></i>5th Year</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #f59e0b; font-weight: bold"
+                    ><i class="fas fa-calendar-check"></i>6th Year</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #9333ea; font-weight: bold"
+                    ><i class="fas fa-calendar-check"></i>7th Year</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #d97706; font-weight: bold"
+                    ><i class="fas fa-calendar-check"></i>8th Year</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #14b8a6; font-weight: bold"
+                    ><i class="fas fa-calendar-check"></i>9th Year</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #db2777; font-weight: bold"
+                    ><i class="fas fa-calendar-check"></i>10th Year</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li
+              class="menu-item {% if request.session.selected_option == 'configurations' %}disabled{% endif %}"
+            >
+              <a href="#" class="menu-toggle">
+                <img
+                  class="sidebar_icon"
+                  src="{% static 'sidebar_images/view.svg' %}"
+                  alt="View Icon"
+                  class="sidebar-logo"
+                />
+                <div class="menu-text">
+                  <strong>View</strong>
+                  <small class="strong">Project views</small>
+                </div>
+                <i class="fas fa-chevron-right menu-arrow"></i>
+              </a>
+              <ul class="submenu">
+                <li>
+                  <a href="#" style="color: #1e40af; font-weight: bold"
+                    ><i class="fas fa-tv"></i>ITMS Live View</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #f97316; font-weight: bold"
+                    ><i class="fas fa-cube"></i>3D View</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #15803d; font-weight: bold"
+                    ><i class="fas fa-file-excel"></i>JM Sheets</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #7c3aed; font-weight: bold"
+                    ><i class="fas fa-drafting-compass"></i>Design Drawing</a
+                  >
+                </li>
+                <li>
+                  <a href="#" style="color: #0e7490; font-weight: bold"
+                    ><i class="fas fa-draw-polygon"></i>As Built Drawings</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">
+                <img
+                  class="sidebar_icon"
+                  src="{% static 'sidebar_images/contact.svg' %}"
+                  alt="Contact Icon"
+                  class="sidebar-logo"
+                />
+                <div class="menu-text">
+                  <strong>Contact Us</strong>
+                  <small class="strong">Get in touch</small>
+                </div>
+              </a>
+            </li>
+          </ul>
+        </div>
+        <!-- Main Content -->
+        <div class="main-content" id="main-content">
+          {% block content %}{% endblock %}
+        </div>
+      </div>
+    </div>
+    <!-- Footer -->
+<footer class="footer mt-auto">
+        <div class="container-fluid text-center fw-bold d-flex justify-content-center align-items-center flex-wrap"
+            style="gap: 12px; padding: 6px 10px;">
+            <div style="display: flex; align-items: center; justify-content: center;">
+                <img src="{% static 'images/MTSS_Logo.png' %}" alt="Monarch Logo" width="50" height="50"
+                    style="border-radius: 50%; border: 2px solid white; background-color: white; padding: 3px; object-fit: contain;">
+            </div>
+            
+            <div style="text-align: left;">
+                <small>© 2025 Monarch Surveyors & Engineering Consultants Ltd. All rights reserved.</small><br>
+                <small style="padding-left: 22px;" >Designed & Developed by Mounarch Tech Solutions & Systems Pvt. Ltd.</small>
+            </div>
+        </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

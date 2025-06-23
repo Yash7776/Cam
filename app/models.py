@@ -343,6 +343,7 @@ class Project_ip_camera_details_all(models.Model):
     password = models.CharField(max_length=100)
     status = models.IntegerField(default=1)  # 1=active, 0=inactive
     last_connected = models.DateTimeField(null=True, blank=True)
+    gps_location=models.CharField(blank=True,null=True)
 
     def __str__(self):
         return self.location_name

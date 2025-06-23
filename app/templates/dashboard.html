@@ -1,1197 +1,1324 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ department.dept_name|upper }} - Dashboard</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ department.dept_name|upper }} - Dashboard</title>
 
-  {% if department.dept_logo %}
-  <link rel="icon" type="image/x-icon" href="{{ department.dept_logo.url }}" />
-  {% endif %}
-
-  <!-- Bootstrap, FontAwesome, Google Fonts, Leaflet -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<style>
-  body {
-    margin: 0;
-    font-family: "Poppins", sans-serif;
-    height: 100vh;
-    overflow: hidden;
-    {% if department.dept_dashboard_bg %}
-    background: url('{{ department.dept_dashboard_bg.url }}') no-repeat center center fixed;
-    background-size: cover;
-    {% else %}
-    background: linear-gradient(135deg, #d1f5fa 0%, #a3e4ed 100%);
+    {% if department.dept_logo %}
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{{ department.dept_logo.url }}"
+    />
     {% endif %}
-    transition: background 0.3s ease;
-  }
 
-  .navbar {
-    background: linear-gradient(to right, #3b1a6b, #4e268b);
-    color: #fff;
-    height: 70px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 2rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 2000;
-  }
-
-  .navbar-brand {
-    display: flex;
-    align-items: center;
-    gap: 1.2rem;
-    color: #fff;
-    text-decoration: none;
-    transition: transform 0.2s ease;
-  }
-
-  .navbar-brand:hover {
-    transform: translateY(-2px);
-  }
-
-  .navbar-brand img {
-    border-radius: 50%;
-    border: 3px solid #ffffffcc;
-    width: 56px;
-    height: 56px;
-    object-fit: cover;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  }
-
-  .navbar-title {
-    font-size: 1.4rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-  }
-
-  .user-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 1.1rem;
-    font-weight: 500;
-    color: #f0f0f0;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 8px 16px;
-    border-radius: 20px;
-    transition: background 0.2s ease;
-  }
-
-  .user-info:hover {
-    background: rgba(255, 255, 255, 0.15);
-  }
-
-  .layout {
-    display: flex;
-    height: calc(100vh - 70px);
-    overflow: hidden;
-  }
-
-  .sidebar {
-    width: 300px;
-    background: linear-gradient(to bottom, #3b1a6b, #4e268b);
-    color: white;
-    transition: width 0.3s ease, box-shadow 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.2);
-    z-index: 1500;
-  }
-
-  .sidebar.collapsed {
-    width: 70px;
-  }
-
-  .sidebar ul {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding: 0;
-    margin: 0;
-    list-style: none;
-    scrollbar-width: thin;
-    scrollbar-color: #6b3fa0 #3b1a6b;
-  }
-
-  .sidebar ul::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  .sidebar ul::-webkit-scrollbar-track {
-    background: #3b1a6b;
-  }
-
-  .sidebar ul::-webkit-scrollbar-thumb {
-    background: #6b3fa0;
-    border-radius: 4px;
-  }
-
-  .sidebar ul li {
-    padding: 18px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid #6b3fa0;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: background 0.2s ease, transform 0.2s ease;
-  }
-
-  .sidebar ul li:first-child {
-    border-top: 2px solid #6b3fa0;
-  }
-
-  .sidebar ul li:hover {
-    background: #5a3096;
-    transform: translateX(4px);
-  }
-
-  .item-left {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  .sidebar.collapsed .item-left {
-    justify-content: center;
-    gap: 0;
-  }
-
-  .label {
-    color: #f0f0f0;
-    transition: opacity 0.2s ease;
-    font-weight: 500;
-  }
-
-  .sidebar.collapsed .label,
-  .sidebar.collapsed i.fa-chevron-right {
-    display: none;
-  }
-
-  .toggle-btn {
-    position: absolute;
-    top: 48%;
-    right: -20px;
-    transform: translateY(-50%);
-    background: linear-gradient(to right, #3b1a6b, #4e268b);
-    border: 3px solid #6b3fa0;
-    border-radius: 50%;
-    width: 44px;
-    height: 44px;
-    font-size: 24px;
-    color: #ffd700;
-    cursor: pointer;
-    z-index: 1001;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    transition: background 0.2s ease, transform 0.2s ease;
-  }
-
-  .toggle-btn:hover {
-    background: linear-gradient(to right, #4e268b, #5a3096);
-    transform: translateY(-50%) rotate(360deg);
-  }
-
-  .map-container {
-    flex-grow: 1;
-    position: relative;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.05);
-  }
-
-  #map {
-    position: fixed;
-    top: 70px;
-    left: 300px;
-    width: calc(100% - 300px);
-    height: calc(100vh - 70px);
-    z-index: 0;
-    background-color: #fff;
-    transition: left 0.3s ease, width 0.3s ease;
-  }
-
-  .sidebar.collapsed ~ .map-container #map {
-    left: 70px;
-    width: calc(100% - 70px);
-  }
-
-  .sidebar.collapsed ~ .map-container img {
-    left: 70px !important;
-    width: calc(100% - 70px) !important;
-  }
-
-  .menu-item.dropdown {
-    position: relative;
-  }
-
-  .menu-item .submenu {
-    display: none;
-    position: absolute;
-    top: 0;
-    left: 100%;
-    min-width: 240px;
-    background: #3a1768;
-    border-radius: 8px;
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
-    z-index: 999;
-    padding: 8px 0;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    transform: translateX(-10px);
-    opacity: 0;
-  }
-
-  .menu-item:hover .submenu {
-    display: block;
-    transform: translateX(0);
-    opacity: 1;
-  }
-
-  .submenu li {
-    padding: 14px 20px;
-    border-bottom: 1px solid #6b3fa0;
-    transition: background 0.2s ease;
-  }
-
-  .submenu li:last-child {
-    border-bottom: none;
-  }
-
-  .submenu li a {
-    color: #f0f0f0;
-    text-decoration: none;
-    display: block;
-    font-weight: 500;
-    transition: color 0.2s ease;
-  }
-
-  .submenu li a:hover {
-    background: #5a3096;
-    border-radius: 4px;
-    color: #ffffff;
-  }
-
-  .popup-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 10000;
-    backdrop-filter: blur(3px);
-    transition: opacity 0.3s ease;
-  }
-
-  .popup {
-    background: #ffffff;
-    padding: 32px;
-    width: 1000px;
-    max-height: 80vh;
-    overflow-y: auto;
-    border-radius: 16px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
-    font-family: 'Poppins', sans-serif;
-    transform: translateY(20px);
-    opacity: 0;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    position: relative;
-    margin: 0 auto;
-    margin-left: calc(50% - 500px); /* Center popup in map container */
-  }
-
-  .sidebar.collapsed ~ .map-container .popup {
-    margin-left: calc(50% - 500px + 115px); /* Adjust for collapsed sidebar */
-  }
-
-  .popup-overlay[style*="display: flex"] .popup {
-    transform: translateY(0);
-    opacity: 1;
-  }
-
-  .popup h3 {
-    margin-bottom: 20px;
-    color: #3b1a6b;
-    font-size: 22px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .popup table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-    font-size: 14px;
-    background: #ffffff;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  .popup th,
-  .popup td {
-    padding: 12px 16px;
-    border: 1px solid #e0e0e0;
-    text-align: left;
-    transition: background 0.2s ease;
-  }
-
-  .popup th {
-    background: #ede7f6;
-    color: #3b1a6b;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 12px;
-    letter-spacing: 0.5px;
-  }
-
-  .popup tr:nth-child(even) {
-    background: #f8fafc;
-  }
-
-  .popup tr:hover {
-    background: #f0f4ff;
-  }
-
-  .popup .actions {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-  }
-
-  .popup button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    color: white;
-    font-weight: 600;
-    font-size: 14px;
-    transition: background 0.2s ease, transform 0.2s ease;
-  }
-
-  .popup button:hover {
-    transform: translateY(-2px);
-  }
-
-  .popup .edit-btn {
-    background: #2ecc71;
-  }
-
-  .popup .edit-btn:hover {
-    background: #27ae60;
-  }
-
-  .popup .delete-btn {
-    background: #e74c3c;
-  }
-
-  .popup .delete-btn:hover {
-    background: #c0392b;
-  }
-
-  .popup .close-btn {
-    margin-top: 16px;
-    background: #3b1a6b;
-    padding: 8px 20px;
-    font-size: 14px;
-    width: 100%;
-    border-radius: 6px;
-  }
-
-  .popup .close-btn:hover {
-    background: #2e155a;
-  }
-
-  .flyout-menu {
-    display: none;
-    flex-direction: column;
-    position: absolute;
-    background: linear-gradient(to bottom, #3b1a6b, #4e268b);
-    border: 1px solid #b39ddb;
-    min-width: 220px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-    z-index: 9999;
-    max-height: 90vh;
-    overflow-y: auto;
-    border-radius: 8px;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-  }
-
-  .flyout-item {
-    padding: 14px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: #f0f0f0;
-    font-weight: 500;
-    border-bottom: 1px solid #6b3fa0;
-    cursor: pointer;
-    transition: background 0.2s ease;
-    justify-content: space-between;
-  }
-
-  .flyout-item:hover {
-    background: #5a3096;
-  }
-
-  .disabled-item {
-    pointer-events: none;
-    background: #4e268b !important;
-    color: #85739b !important;
-    opacity: 1;
-  }
-
-  .disabled-item .label,
-  .disabled-item i {
-    color: #85739b !important;
-  }
-
-  .project-background {
-    position: fixed;
-    top: 70px;
-    left: 300px;
-    width: calc(100% - 300px);
-    height: calc(100vh - 70px);
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center center;
-    z-index: 0;
-    transition: left 0.3s ease, width 0.3s ease;
-    filter: brightness(0.95);
-  }
-
-  .sidebar.collapsed ~ .map-container .project-background {
-    left: 70px !important;
-    width: calc(100% - 70px) !important;
-  }
-
-  /* Styles for submenu containers */
-  #submenu-container, #submenu-container-2 {
-    display: none;
-    position: absolute;
-    background: linear-gradient(to bottom, #3b1a6b, #4e268b);
-    border: 1px solid #b39ddb;
-    min-width: 220px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-    z-index: 10000;
-    max-height: 90vh;
-    overflow-y: auto;
-    border-radius: 8px;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    padding: 8px 0;
-  }
-
-  .submenu-item {
-    padding: 14px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: #f0f0f0;
-    font-weight: 500;
-    border-bottom: 1px solid #6b3fa0;
-    cursor: pointer;
-    transition: background 0.2s ease;
-  }
-
-  .submenu-item:hover {
-    background: #5a3096;
-  }
-
-  .submenu-item:last-child {
-    border-bottom: none;
-  }
-
-  /* IPCamera: Styles for video popup */
-  .video-popup-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: none;
-    justify-content: flex-end;
-    align-items: center;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 10001;
-    backdrop-filter: blur(3px);
-    transition: opacity 0.3s ease;
-  }
-
-  .video-popup {
-    background: #ffffff;
-    padding: 32px;
-    width: 400px;
-    max-height: 80vh;
-    overflow-y: auto;
-    border-radius: 16px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
-    font-family: 'Poppins', sans-serif;
-    transform: translateX(20px);
-    opacity: 0;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    position: relative;
-    margin-right: 20px;
-  }
-
-  .video-popup-overlay[style*="display: flex"] .video-popup {
-    transform: translateX(0);
-    opacity: 1;
-  }
-
-  .video-popup h3 {
-    margin-bottom: 20px;
-    color: #3b1a6b;
-    font-size: 22px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .video-popup video {
-    width: 100%;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-  .no-feed-banner {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px;
-            border-radius: 5px;
-            text-align: center;
-            z-index: 10;
-            display: none;
-        }
-        .no-feed-banner img {
-            max-width: 50px;
-            margin-bottom: 10px;
-        }  
-</style>
-</head>
-<body>
-  <nav class="navbar shadow-sm">
-    <div class="navbar-brand">
-      {% if department.dept_logo %}
-      <img src="{{ department.dept_logo.url }}" alt="Logo" />
-      {% endif %}
-      <div class="navbar-title">{{ department.dept_full_name }}</div>
-    </div>
-    <div class="user-info">
-      <span>{{ user_name|default:"Guest" }}</span>
-      <i class="fas fa-user-circle fa-2x"></i>
-    </div>
-  </nav>
-
-  <div class="layout">
-    <div class="sidebar" id="sidebar">
-      <button class="toggle-btn" id="toggleBtn" onclick="toggleSidebar(this)"><</button>
-      <ul>
-        <li class="flyout-trigger" data-flyout="project">
-          <div class="item-left">
-            <i class="fas fa-folder"></i>
-            <span class="label">Projects</span>
-          </div>
-          <i class="fas fa-chevron-right"></i>
-        </li>
-        <div id="locked-sidebar">
-          <li class="disabled-item"><div class="item-left"><i class="fas fa-pen"></i><span class="label">District</span></div><i class="fas fa-chevron-right"></i></li>
-          <li class="disabled-item flyout-trigger" data-flyout="tender">
-            <div class="item-left"><i class="fas fa-users"></i><span class="label">Package Document</span></div>
-            <i class="fas fa-chevron-right"></i>
-          </li>
-          <li class="disabled-item"><div class="item-left"><i class="fas fa-file"></i><span class="label">GIS & Land</span></div><i class="fas fa-chevron-right"></i></li>
-          
-          <!-- IPCamera: Modified Views item to trigger video popup -->
-           {% if cameras %}
-          <li class="disabled-item video-popup-trigger" onclick="showVideoPopup()">
-            <div class="item-left" >
-              <i class="fas fa-camera"></i><span class="label">View Cameras</span>
-            </div>
-            <i class="fas fa-chevron-right"></i>
-          </li>
+    <!-- Bootstrap, FontAwesome, Google Fonts, Leaflet -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <style>
+        body {
+          margin: 0;
+          font-family: "Poppins", sans-serif;
+          height: 100vh;
+          overflow: hidden;
+          {% if department.dept_dashboard_bg %}
+          background: url('{{ department.dept_dashboard_bg.url }}') no-repeat center center fixed;
+          background-size: cover;
+          {% else %}
+          background: linear-gradient(135deg, #d1f5fa 0%, #a3e4ed 100%);
           {% endif %}
+          transition: background 0.3s ease;
+        }
 
+        .navbar {
+          background: linear-gradient(to right, #3b1a6b, #4e268b);
+          color: #fff;
+          height: 70px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 2rem;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          z-index: 2000;
+        }
 
+        .navbar-brand {
+          display: flex;
+          align-items: center;
+          gap: 1.2rem;
+          color: #fff;
+          text-decoration: none;
+          transition: transform 0.2s ease;
+        }
 
-          <li class="disabled-item"><div class="item-left"><i class="fas fa-warehouse"></i><span class="label">Assets</span></div><i class="fas fa-chevron-right"></i></li>
-          <li class="disabled-item flyout-trigger" data-flyout="clearance">
-            <div class="item-left"><i class="fas fa-shield-alt"></i><span class="label">Clearance</span></div>
+        .navbar-brand:hover {
+          transform: translateY(-2px);
+        }
+
+        .navbar-brand img {
+          border-radius: 50%;
+          border: 3px solid #ffffffcc;
+          width: 56px;
+          height: 56px;
+          object-fit: cover;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-title {
+          font-size: 1.4rem;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .user-info {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-size: 1.1rem;
+          font-weight: 500;
+          color: #f0f0f0;
+          background: rgba(255, 255, 255, 0.1);
+          padding: 8px 16px;
+          border-radius: 20px;
+          transition: background 0.2s ease;
+        }
+
+        .user-info:hover {
+          background: rgba(255, 255, 255, 0.15);
+        }
+
+        .layout {
+          display: flex;
+          height: calc(100vh - 70px);
+          overflow: hidden;
+        }
+
+        .sidebar {
+          width: 300px;
+          background: linear-gradient(to bottom, #3b1a6b, #4e268b);
+          color: white;
+          transition: width 0.3s ease, box-shadow 0.3s ease;
+          display: flex;
+          flex-direction: column;
+          position: relative;
+          box-shadow: 4px 0 16px rgba(0, 0, 0, 0.2);
+          z-index: 1500;
+        }
+
+        .sidebar.collapsed {
+          width: 70px;
+        }
+
+        .sidebar ul {
+          flex-grow: 1;
+          overflow-y: auto;
+          padding: 0;
+          margin: 0;
+          list-style: none;
+          scrollbar-width: thin;
+          scrollbar-color: #6b3fa0 #3b1a6b;
+        }
+
+        .sidebar ul::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        .sidebar ul::-webkit-scrollbar-track {
+          background: #3b1a6b;
+        }
+
+        .sidebar ul::-webkit-scrollbar-thumb {
+          background: #6b3fa0;
+          border-radius: 4px;
+        }
+
+        .sidebar ul li {
+          padding: 18px 16px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-bottom: 1px solid #6b3fa0;
+          font-size: 1.1rem;
+          cursor: pointer;
+          transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .sidebar ul li:first-child {
+          border-top: 2px solid #6b3fa0;
+        }
+
+        .sidebar ul li:hover {
+          background: #5a3096;
+          transform: translateX(4px);
+        }
+
+        .item-left {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
+
+        .sidebar.collapsed .item-left {
+          justify-content: center;
+          gap: 0;
+        }
+
+        .label {
+          color: #f0f0f0;
+          transition: opacity 0.2s ease;
+          font-weight: 500;
+        }
+
+        .sidebar.collapsed .label,
+        .sidebar.collapsed i.fa-chevron-right {
+          display: none;
+        }
+
+        .toggle-btn {
+          position: absolute;
+          top: 48%;
+          right: -20px;
+          transform: translateY(-50%);
+          background: linear-gradient(to right, #3b1a6b, #4e268b);
+          border: 3px solid #6b3fa0;
+          border-radius: 50%;
+          width: 44px;
+          height: 44px;
+          font-size: 24px;
+          color: #ffd700;
+          cursor: pointer;
+          z-index: 1001;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+          transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .toggle-btn:hover {
+          background: linear-gradient(to right, #4e268b, #5a3096);
+          transform: translateY(-50%) rotate(360deg);
+        }
+
+        .map-container {
+          flex-grow: 1;
+          position: relative;
+          height: 100%;
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        #map {
+          position: fixed;
+          top: 70px;
+          left: 300px;
+          width: calc(100% - 300px);
+          height: calc(100vh - 70px);
+          z-index: 0;
+          background-color: #fff;
+          transition: left 0.3s ease, width 0.3s ease;
+        }
+
+        .sidebar.collapsed ~ .map-container #map {
+          left: 70px;
+          width: calc(100% - 70px);
+        }
+
+        .sidebar.collapsed ~ .map-container img {
+          left: 70px !important;
+          width: calc(100% - 70px) !important;
+        }
+
+        .menu-item.dropdown {
+          position: relative;
+        }
+
+        .menu-item .submenu {
+          display: none;
+          position: absolute;
+          top: 0;
+          left: 100%;
+          min-width: 240px;
+          background: #3a1768;
+          border-radius: 8px;
+          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+          z-index: 999;
+          padding: 8px 0;
+          transition: opacity 0.2s ease, transform 0.2s ease;
+          transform: translateX(-10px);
+          opacity: 0;
+        }
+
+        .menu-item:hover .submenu {
+          display: block;
+          transform: translateX(0);
+          opacity: 1;
+        }
+
+        .submenu li {
+          padding: 14px 20px;
+          border-bottom: 1px solid #6b3fa0;
+          transition: background 0.2s ease;
+        }
+
+        .submenu li:last-child {
+          border-bottom: none;
+        }
+
+        .submenu li a {
+          color: #f0f0f0;
+          text-decoration: none;
+          display: block;
+          font-weight: 500;
+          transition: color 0.2s ease;
+        }
+
+        .submenu li a:hover {
+          background: #5a3096;
+          border-radius: 4px;
+          color: #ffffff;
+        }
+
+        .popup-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          display: none;
+          justify-content: center;
+          align-items: center;
+          background: rgba(0, 0, 0, 0.6);
+          z-index: 10000;
+          backdrop-filter: blur(3px);
+          transition: opacity 0.3s ease;
+        }
+
+        .popup {
+          background: #ffffff;
+          padding: 32px;
+          width: 1000px;
+          max-height: 80vh;
+          overflow-y: auto;
+          border-radius: 16px;
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+          font-family: 'Poppins', sans-serif;
+          transform: translateY(20px);
+          opacity: 0;
+          transition: transform 0.3s ease, opacity 0.3s ease;
+          position: relative;
+          margin: 0 auto;
+          margin-left: calc(50% - 500px); /* Center popup in map container */
+        }
+
+        .sidebar.collapsed ~ .map-container .popup {
+          margin-left: calc(50% - 500px + 115px); /* Adjust for collapsed sidebar */
+        }
+
+        .popup-overlay[style*="display: flex"] .popup {
+          transform: translateY(0);
+          opacity: 1;
+        }
+
+        .popup h3 {
+          margin-bottom: 20px;
+          color: #3b1a6b;
+          font-size: 22px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .popup table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 20px;
+          font-size: 14px;
+          background: #ffffff;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+
+        .popup th,
+        .popup td {
+          padding: 12px 16px;
+          border: 1px solid #e0e0e0;
+          text-align: left;
+          transition: background 0.2s ease;
+        }
+
+        .popup th {
+          background: #ede7f6;
+          color: #3b1a6b;
+          font-weight: 700;
+          text-transform: uppercase;
+          font-size: 12px;
+          letter-spacing: 0.5px;
+        }
+
+        .popup tr:nth-child(even) {
+          background: #f8fafc;
+        }
+
+        .popup tr:hover {
+          background: #f0f4ff;
+        }
+
+        .popup .actions {
+          display: flex;
+          gap: 10px;
+          justify-content: center;
+        }
+
+        .popup button {
+          padding: 8px 16px;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          color: white;
+          font-weight: 600;
+          font-size: 14px;
+          transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .popup button:hover {
+          transform: translateY(-2px);
+        }
+
+        .popup .edit-btn {
+          background: #2ecc71;
+        }
+
+        .popup .edit-btn:hover {
+          background: #27ae60;
+        }
+
+        .popup .delete-btn {
+          background: #e74c3c;
+        }
+
+        .popup .delete-btn:hover {
+          background: #c0392b;
+        }
+
+        .popup .close-btn {
+          margin-top: 16px;
+          background: #3b1a6b;
+          padding: 8px 20px;
+          font-size: 14px;
+          width: 100%;
+          border-radius: 6px;
+        }
+
+        .popup .close-btn:hover {
+          background: #2e155a;
+        }
+
+        .flyout-menu {
+          display: none;
+          flex-direction: column;
+          position: absolute;
+          background: linear-gradient(to bottom, #3b1a6b, #4e268b);
+          border: 1px solid #b39ddb;
+          min-width: 220px;
+          box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+          z-index: 9999;
+          max-height: 90vh;
+          overflow-y: auto;
+          border-radius: 8px;
+          transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .flyout-item {
+          padding: 14px 20px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          color: #f0f0f0;
+          font-weight: 500;
+          border-bottom: 1px solid #6b3fa0;
+          cursor: pointer;
+          transition: background 0.2s ease;
+          justify-content: space-between;
+        }
+
+        .flyout-item:hover {
+          background: #5a3096;
+        }
+
+        .disabled-item {
+          pointer-events: none;
+          background: #4e268b !important;
+          color: #85739b !important;
+          opacity: 1;
+        }
+
+        .disabled-item .label,
+        .disabled-item i {
+          color: #85739b !important;
+        }
+
+        .project-background {
+          position: fixed;
+          top: 70px;
+          left: 300px;
+          width: calc(100% - 300px);
+          height: calc(100vh - 70px);
+          background-size: cover;
+          background-repeat: no-repeat;
+          background-position: center center;
+          z-index: 0;
+          transition: left 0.3s ease, width 0.3s ease;
+          filter: brightness(0.95);
+        }
+
+        .sidebar.collapsed ~ .map-container .project-background {
+          left: 70px !important;
+          width: calc(100% - 70px) !important;
+        }
+
+        /* Styles for submenu containers */
+        #submenu-container, #submenu-container-2 {
+          display: none;
+          position: absolute;
+          background: linear-gradient(to bottom, #3b1a6b, #4e268b);
+          border: 1px solid #b39ddb;
+          min-width: 220px;
+          box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+          z-index: 10000;
+          max-height: 90vh;
+          overflow-y: auto;
+          border-radius: 8px;
+          transition: opacity 0.2s ease, transform 0.2s ease;
+          padding: 8px 0;
+        }
+
+        .submenu-item {
+          padding: 14px 20px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          color: #f0f0f0;
+          font-weight: 500;
+          border-bottom: 1px solid #6b3fa0;
+          cursor: pointer;
+          transition: background 0.2s ease;
+        }
+
+        .submenu-item:hover {
+          background: #5a3096;
+        }
+
+        .submenu-item:last-child {
+          border-bottom: none;
+        }
+
+        /* IPCamera: Styles for video popup */
+        .video-popup-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          display: none;
+          justify-content: flex-end;
+          align-items: center;
+          background: rgba(0, 0, 0, 0.6);
+          z-index: 10001;
+          backdrop-filter: blur(3px);
+          transition: opacity 0.3s ease;
+        }
+
+        .video-popup {
+          background: #ffffff;
+          padding: 32px;
+          width: 400px;
+          max-height: 80vh;
+          overflow-y: auto;
+          border-radius: 16px;
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+          font-family: 'Poppins', sans-serif;
+          transform: translateX(20px);
+          opacity: 0;
+          transition: transform 0.3s ease, opacity 0.3s ease;
+          position: relative;
+          margin-right: 20px;
+        }
+
+        .video-popup-overlay[style*="display: flex"] .video-popup {
+          transform: translateX(0);
+          opacity: 1;
+        }
+
+        .video-popup h3 {
+          margin-bottom: 20px;
+          color: #3b1a6b;
+          font-size: 22px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .video-popup video {
+          width: 100%;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .no-feed-banner {
+                  position: absolute;
+                  top: 50%;
+                  left: 50%;
+                  transform: translate(-50%, -50%);
+                  background-color: rgba(0, 0, 0, 0.8);
+                  color: white;
+                  padding: 15px;
+                  border-radius: 5px;
+                  text-align: center;
+                  z-index: 10;
+                  display: none;
+              }
+              .no-feed-banner img {
+                  max-width: 50px;
+                  margin-bottom: 10px;
+              }
+              .camera-buttons {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin-bottom: 20px;
+      }
+
+      .camera-feed-container {
+          position: relative;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar shadow-sm">
+      <div class="navbar-brand">
+        {% if department.dept_logo %}
+        <img src="{{ department.dept_logo.url }}" alt="Logo" />
+        {% endif %}
+        <div class="navbar-title">{{ department.dept_full_name }}</div>
+      </div>
+      <div class="user-info">
+        <span>{{ user_name|default:"Guest" }}</span>
+        <i class="fas fa-user-circle fa-2x"></i>
+      </div>
+    </nav>
+
+    <div class="layout">
+      <div class="sidebar" id="sidebar">
+        <button class="toggle-btn" id="toggleBtn" onclick="toggleSidebar(this)">
+          <
+        </button>
+        <ul>
+          <li class="flyout-trigger" data-flyout="project">
+            <div class="item-left">
+              <i class="fas fa-folder"></i>
+              <span class="label">Projects</span>
+            </div>
             <i class="fas fa-chevron-right"></i>
           </li>
-          <li class="disabled-item"><div class="item-left"><i class="fas fa-chart-line"></i><span class="label">Progress</span></div><i class="fas fa-chevron-right"></i></li>
-          <li class="disabled-item"><div class="item-left"><i class="fas fa-credit-card"></i><span class="label">Billing</span></div><i class="fas fa-chevron-right"></i></li>
-          <li class="disabled-item"><div class="item-left"><i class="fas fa-tools"></i><span class="label">Maintenance</span></div><i class="fas fa-chevron-right"></i></li>
-        </div>
-      </ul>
-    </div>
-  </div>
+          <div id="locked-sidebar">
+            <li class="disabled-item">
+              <div class="item-left">
+                <i class="fas fa-pen"></i><span class="label">District</span>
+              </div>
+              <i class="fas fa-chevron-right"></i>
+            </li>
+            <li class="disabled-item flyout-trigger" data-flyout="tender">
+              <div class="item-left">
+                <i class="fas fa-users"></i
+                ><span class="label">Package Document</span>
+              </div>
+              <i class="fas fa-chevron-right"></i>
+            </li>
+            <li class="disabled-item">
+              <div class="item-left">
+                <i class="fas fa-file"></i><span class="label">GIS & Land</span>
+              </div>
+              <i class="fas fa-chevron-right"></i>
+            </li>
 
-  <div class="map-container" style="position: relative;">
-    {% if current_project.project_image %}
-      <div id="project-image" class="project-background"
-        style="background-image: url('{{ current_project.project_image.url }}');">
+            <!-- IPCamera: Modified Views item to trigger video popup -->
+            {% if cameras %}
+            <li
+              class="disabled-item video-popup-trigger"
+              onclick="showVideoPopup()"
+            >
+              <div class="item-left">
+                <i class="fas fa-camera"></i
+                ><span class="label">View Cameras</span>
+              </div>
+              <i class="fas fa-chevron-right"></i>
+            </li>
+            {% endif %}
+
+            <li class="disabled-item">
+              <div class="item-left">
+                <i class="fas fa-warehouse"></i
+                ><span class="label">Assets</span>
+              </div>
+              <i class="fas fa-chevron-right"></i>
+            </li>
+            <li class="disabled-item flyout-trigger" data-flyout="clearance">
+              <div class="item-left">
+                <i class="fas fa-shield-alt"></i
+                ><span class="label">Clearance</span>
+              </div>
+              <i class="fas fa-chevron-right"></i>
+            </li>
+            <li class="disabled-item">
+              <div class="item-left">
+                <i class="fas fa-chart-line"></i
+                ><span class="label">Progress</span>
+              </div>
+              <i class="fas fa-chevron-right"></i>
+            </li>
+            <li class="disabled-item">
+              <div class="item-left">
+                <i class="fas fa-credit-card"></i
+                ><span class="label">Billing</span>
+              </div>
+              <i class="fas fa-chevron-right"></i>
+            </li>
+            <li class="disabled-item">
+              <div class="item-left">
+                <i class="fas fa-tools"></i
+                ><span class="label">Maintenance</span>
+              </div>
+              <i class="fas fa-chevron-right"></i>
+            </li>
+          </div>
+        </ul>
       </div>
-    {% else %}
+    </div>
+
+    <div class="map-container" style="position: relative">
+      {% if current_project.project_image %}
+      <div
+        id="project-image"
+        class="project-background"
+        style="background-image: url('{{ current_project.project_image.url }}');"
+      ></div>
+      {% else %}
       <div id="map"></div>
-    {% endif %}
-    <div id="popup-overlay" class="popup-overlay">
-      <div class="popup">
-        <h3><i class="fas fa-file-alt" style="margin-right: 8px; color: #3b1a6b;"></i>Clearance Details</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Sr No</th>
-              <th>Clearance Name</th>
-              <th>Document</th>
-              <th>Inserted On</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>1</td>
-              <td>Environment NOC</td>
-              <td>env_noc.pdf</td>
-              <td>2025-06-16</td>
-              <td class="actions">
-                <button class="edit-btn">Edit</button>
-                <button class="delete-btn">Delete</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <button class="close-btn">Close</button>
+      {% endif %}
+      <div id="popup-overlay" class="popup-overlay">
+        <div class="popup">
+          <h3>
+            <i
+              class="fas fa-file-alt"
+              style="margin-right: 8px; color: #3b1a6b"
+            ></i
+            >Clearance Details
+          </h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Sr No</th>
+                <th>Clearance Name</th>
+                <th>Document</th>
+                <th>Inserted On</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>Environment NOC</td>
+                <td>env_noc.pdf</td>
+                <td>2025-06-16</td>
+                <td class="actions">
+                  <button class="edit-btn">Edit</button>
+                  <button class="delete-btn">Delete</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <button class="close-btn">Close</button>
+        </div>
       </div>
-    </div>
-    <!-- IPCamera: New video popup overlay -->
-    <div id="video-popup-overlay" class="video-popup-overlay">
-      <div class="video-popup">
-        <h3><i class="fas fa-video" style="margin-right:8px; color: #3b1a6b;"></i>Live Camera Feed
-          <button class="close-btn btn btn-dark text-right " style="background-color: #3b1a6b;">Close</button>
-        </h3>
+      <!-- IPCamera: New video popup overlay -->
+      <div id="video-popup-overlay" class="video-popup-overlay">
+        <div class="video-popup">
+          <h3>
+            <i
+              class="fas fa-video"
+              style="margin-right: 8px; color: #3b1a6b"
+            ></i
+            >Live Camera Feed
+            <button
+              class="close-btn btn btn-danger text-right"
+              
+            >
+              Close
+            </button>
+          </h3>
 
-        {% for cam in cameras %}
-            <div class="col">
-                <div class="card h-100 mb-3">
-                    <div class="position-relative">
-                        <video id="video{{ cam.camera_id }}" class="card-img-top" width="100%" controls autoplay muted></video>
-                        <div id="noFeedBanner{{ cam.camera_id }}" class="no-feed-banner">
-                            <!-- <img src="https://cdn-icons-png.flaticon.com/512/1146/1146867.png" alt="No Feed Icon"> -->
-                            <div>No Feed Available</div>
-                        </div>
-                        <span id="deleteIcon{{ cam.camera_id }}" class="position-absolute top-0 end-0 m-2 btn btn-sm btn-danger d-none" onclick="openDeleteModal('{{ cam.camera_id }}', '{{ cam.location_name }}')">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
-                                <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528M8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5"/>
-                            </svg>
-                        </span>
-                        <span class="position-absolute top-100 start-0 translate-middle m-2 badge {% if cam.status == 1 %}bg-success{% else %}bg-danger{% endif %}">
-                            {% if cam.status == 1 %}Online{% else %}Offline{% endif %}
-                        </span>
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title text-center">{{ cam.location_name }}</h5>
-                    </div>
-                </div>
-            </div>
+          <!-- Camera Buttons -->
+          <div class="camera-buttons">
+            {% for cam in cameras %}
+            <button
+              class="btn mb-2 mr-2 text-white rounded-pill" style="background-color: #3b1a6b"
+              onclick="showCameraFeed('{{ cam.camera_id }}')"
+            >
+              {{ cam.location_name }}
+            </button>
             {% empty %}
             <p class="text-muted">No cameras available.</p>
             {% endfor %}
+          </div>
 
+          <!-- Single Video Feed Container -->
+          <div class="camera-feed-container">
+            <video
+              id="selectedVideo"
+              class="card-img-top"
+              width="100%"
+              controls
+              autoplay
+              muted
+              style="display: none"
+            ></video>
+            <div id="noFeedBanner" class="no-feed-banner" style="display: none">
+              <div>No Feed Available</div>
+            </div>
+            <span
+              id="statusBadge"
+              class="badge position-absolute top-100 start-0 translate-middle m-2"
+              style="display: none"
+            ></span>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div id="flyout-project" class="flyout-menu">
-    {% for project in projects %}
-      <div class="flyout-item submenu-trigger" data-project-id="{{ project.project_id }}">
-        <div class="item-left" onclick="selectProject('{% url 'project_detail' dept_name=department.dept_name project_id=project.project_id %}')">
+    <div id="flyout-project" class="flyout-menu">
+      {% for project in projects %}
+      <div
+        class="flyout-item submenu-trigger"
+        data-project-id="{{ project.project_id }}"
+      >
+        <div
+          class="item-left"
+          onclick="selectProject('{% url 'project_detail' dept_name=department.dept_name project_id=project.project_id %}')"
+        >
           <i class="fas fa-folder-open"></i> {{ project.project_name }}
         </div>
         <i class="fas fa-chevron-right"></i>
       </div>
-    {% endfor %}
-  </div>
-  <div id="flyout-tender" class="flyout-menu"></div>
-  <div id="flyout-clearance" class="flyout-menu"></div>
-  <div id="submenu-container"></div>
-  <div id="submenu-container-2"></div>
+      {% endfor %}
+    </div>
+    <div id="flyout-tender" class="flyout-menu"></div>
+    <div id="flyout-clearance" class="flyout-menu"></div>
+    <div id="submenu-container"></div>
+    <div id="submenu-container-2"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
- <script>
-        // HLS.js video streaming and no-feed banner handling
-        {% for cam in cameras %}
-            (function() {
-                const video = document.getElementById("video{{ cam.camera_id }}");
-                const noFeedBanner = document.getElementById("noFeedBanner{{ cam.camera_id }}");
-                const url = "/media/stream/cam_{{ cam.camera_id }}.m3u8";
-                let hls = null;
-                let isPlaying = false;
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script>
+      // HLS.js video streaming and no-feed banner handling
+      function showCameraFeed(cameraId) {
+    const video = document.getElementById('selectedVideo');
+    const noFeedBanner = document.getElementById('noFeedBanner');
+    const statusBadge = document.getElementById('statusBadge');
+    const cameras = {{ cameras|safe }};
 
-                // Function to attempt loading the stream
-                function loadStream() {
-                    if (Hls.isSupported()) {
-                        if (hls) {
-                            hls.destroy(); // Clean up previous instance
-                        }
-                        hls = new Hls();
-                        hls.loadSource(url);
-                        hls.attachMedia(video);
-                        hls.on(Hls.Events.MEDIA_ATTACHED, () => {
-                            video.play().catch(() => {
-                                noFeedBanner.style.display = 'block';
-                            });
-                        });
-                        hls.on(Hls.Events.ERROR, (event, data) => {
-                            if (data.fatal) {
-                                noFeedBanner.style.display = 'block';
-                                isPlaying = false;
-                            }
-                        });
-                    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-                        video.src = url;
-                        video.play().catch(() => {
-                            noFeedBanner.style.display = 'block';
-                        });
-                    }
-                }
+    // Find the selected camera
+    const selectedCam = cameras.find(cam => cam.camera_id === cameraId);
+    if (selectedCam) {
+        const url = `/media/stream/cam_${selectedCam.camera_id}.m3u8`;
+        let hls = null;
+        let isPlaying = false;
 
-                // Check video status and retry if not playing
-                function checkVideoStatus() {
-                    if (video.readyState >= 3 && !video.paused) {
-                        noFeedBanner.style.display = 'none';
-                        isPlaying = true;
-                    } else {
+        // Clean up previous HLS instance if it exists
+        if (hls) {
+            hls.destroy();
+        }
+
+        // Load the stream
+        function loadStream() {
+            if (Hls.isSupported()) {
+                hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+                    video.play().catch(() => {
+                        noFeedBanner.style.display = 'block';
+                    });
+                });
+                hls.on(Hls.Events.ERROR, (event, data) => {
+                    if (data.fatal) {
                         noFeedBanner.style.display = 'block';
                         isPlaying = false;
-                        loadStream(); // Retry loading the stream
                     }
-                }
-
-                // Initial stream load
-                loadStream();
-
-                // Check video status every 3 seconds
-                setInterval(checkVideoStatus, 3000);
-
-                // Update status on playing
-                video.addEventListener('playing', () => {
-                    noFeedBanner.style.display = 'none';
-                    isPlaying = true;
                 });
-
-                // Handle errors or stalls
-                video.addEventListener('error', () => {
+            } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+                video.src = url;
+                video.play().catch(() => {
                     noFeedBanner.style.display = 'block';
-                    isPlaying = false;
                 });
-
-                video.addEventListener('stalled', () => {
-                    noFeedBanner.style.display = 'block';
-                    isPlaying = false;
-                });
-            })();
-        {% endfor %}
-
-        // Toggle delete mode
-        function toggleDeleteMode() {
-            const deleteIcons = document.querySelectorAll('[id^="deleteIcon"]');
-            const removeBtn = document.getElementById('removeIpBtn');
-            const doneBtn = document.getElementById('doneBtn');
-            deleteIcons.forEach(icon => icon.classList.toggle('d-none'));
-            removeBtn.classList.toggle('d-none');
-            doneBtn.classList.toggle('d-none');
+            }
         }
 
-        // Open delete confirmation modal
-        function openDeleteModal(cameraId, cameraName) {
-            const modal = new bootstrap.Modal(document.getElementById('deleteCameraModal'));
-            document.getElementById('deleteConfirmationText').innerText = 
-                `Are you sure you want to delete ${cameraName}?`;
-            document.getElementById('confirmDeleteBtn').onclick = function() {
-                window.location.href = `/delete_camera/${encodeURIComponent(cameraId)}/`;
-            };
-            modal.show();
+        // Check video status
+        function checkVideoStatus() {
+            if (video.readyState >= 3 && !video.paused) {
+                noFeedBanner.style.display = 'none';
+                isPlaying = true;
+            } else {
+                noFeedBanner.style.display = 'block';
+                isPlaying = false;
+                loadStream(); // Retry if needed
+            }
         }
 
-        // Handle add camera form submission
-        document.getElementById('addCameraForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const form = this;
-            const errorMessage = document.getElementById('errorMessage');
-            fetch(form.action, {
-                method: 'POST',
-                body: new FormData(form),
-                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.reload(); // Still needed for new cameras
-                } else {
-                    errorMessage.classList.remove('d-none');
-                    errorMessage.innerText = data.error;
-                }
-            })
-            .catch(() => {
-                errorMessage.classList.remove('d-none');
-                errorMessage.innerText = 'An error occurred. Please try again.';
-            });
+        // Initial load
+        video.style.display = 'block';
+        noFeedBanner.style.display = 'none';
+        loadStream();
+
+        // Update status badge
+        statusBadge.textContent = selectedCam.status === 1 ? 'Online' : 'Offline';
+        statusBadge.className = 'badge position-absolute top-100 start-0 translate-middle m-2 ' + 
+                              (selectedCam.status === 1 ? 'bg-success' : 'bg-danger');
+        statusBadge.style.display = 'block';
+
+        // Event listeners
+        video.addEventListener('playing', () => {
+            noFeedBanner.style.display = 'none';
+            isPlaying = true;
         });
-    </script>
-<script>
-  // 🗺️ Initialize map if available
-  if (document.getElementById('map')) {
-    const map = L.map('map', {
-      center: [22.5937, 78.9629],
-      zoom: 5,
-      dragging: false,
-      touchZoom: false,
-      scrollWheelZoom: false,
-      doubleClickZoom: false,
-      boxZoom: false,
-      keyboard: false,
-      zoomControl: false,
-      attributionControl: false,
-    });
+        video.addEventListener('error', () => {
+            noFeedBanner.style.display = 'block';
+            isPlaying = false;
+        });
+        video.addEventListener('stalled', () => {
+            noFeedBanner.style.display = 'block';
+            isPlaying = false;
+        });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        map.invalidateSize();
-        map.setView([22.5937, 78.9629], 4.5); // Ensure proper layout on load
-      }, 400);
-    });
-
-    window.map = map;
-  }
-
-  function updateImagePosition() {
-    const sidebar = document.getElementById("sidebar");
-    const image = document.getElementById("project-image");
-    const mapDiv = document.getElementById("map");
-
-    const isCollapsed = sidebar.classList.contains("collapsed");
-
-    if (image) {
-      image.style.left = isCollapsed ? "70px" : "300px";
-      image.style.width = isCollapsed ? "calc(100% - 70px)" : "calc(100% - 300px)";
+        // Periodic check
+        setInterval(checkVideoStatus, 3000);
+    } else {
+        video.style.display = 'none';
+        noFeedBanner.style.display = 'block';
+        statusBadge.style.display = 'none';
     }
+}
 
-    if (mapDiv) {
-      mapDiv.style.left = isCollapsed ? "70px" : "300px";
-      mapDiv.style.width = isCollapsed ? "calc(100% - 300px)" : "calc(100% - 300px)";
+// Load the first camera by default if available
+  document.addEventListener('DOMContentLoaded', () => {
+    const cameras = {{ cameras|safe }};
+    if (cameras.length > 0) {
+        showCameraFeed(cameras[0].camera_id);
     }
-  }
+  });
 
-  // Sidebar toggle
-  function toggleSidebar(btn) {
-    const sidebar = document.getElementById("sidebar");
-    sidebar.classList.toggle("collapsed");
-    btn.innerHTML = sidebar.classList.contains("collapsed") ? ">" : "<";
+      
 
-    updateImagePosition();
-
-    setTimeout(() => {
-      if (window.map) {
-        map.invalidateSize();
-        map._onResize?.();
+      // Toggle delete mode
+      function toggleDeleteMode() {
+          const deleteIcons = document.querySelectorAll('[id^="deleteIcon"]');
+          const removeBtn = document.getElementById('removeIpBtn');
+          const doneBtn = document.getElementById('doneBtn');
+          deleteIcons.forEach(icon => icon.classList.toggle('d-none'));
+          removeBtn.classList.toggle('d-none');
+          doneBtn.classList.toggle('d-none');
       }
-    }, 400);
 
-    if (document.getElementById('popup-overlay').style.display === 'flex') {
-      centerPopup();
-    }
+      // Open delete confirmation modal
+      function openDeleteModal(cameraId, cameraName) {
+          const modal = new bootstrap.Modal(document.getElementById('deleteCameraModal'));
+          document.getElementById('deleteConfirmationText').innerText =
+              `Are you sure you want to delete ${cameraName}?`;
+          document.getElementById('confirmDeleteBtn').onclick = function() {
+              window.location.href = `/delete_camera/${encodeURIComponent(cameraId)}/`;
+          };
+          modal.show();
+      }
 
-    if (document.getElementById('video-popup-overlay').style.display === 'flex') {
-      positionVideoPopup();
-    }
-
-    setTimeout(updatePopupPosition, 300);
-
-    // Hide submenu containers when sidebar toggles
-    document.getElementById('submenu-container').style.display = 'none';
-    document.getElementById('submenu-container-2').style.display = 'none';
-  }
-
-  const flyoutTender = document.getElementById('flyout-tender');
-  const flyoutClearance = document.getElementById('flyout-clearance');
-  const flyoutProject = document.getElementById('flyout-project');
-  const submenuContainer = document.getElementById('submenu-container');
-  const submenuContainer2 = document.getElementById('submenu-container-2');
-
-  // Store submenu data for each project
-  const projectSubmenus = {
-    {% for project in projects %}
-      "{{ project.project_id }}": {{ project.submenus|safe }},
-    {% endfor %}
-  };
-
-  function getFlyoutContent(type) {
-    if (type === 'tender' || type === 'clearance') {
-      return `
-        <div class="flyout-item"><i class="fas fa-folder"></i> Package A</div>
-        <div class="flyout-item"><i class="fas fa-folder"></i> Package B</div>
-        <div class="flyout-item"><i class="fas fa-folder"></i> Package C</div>
-      `;
-    }
-    return '';
-  }
-
-  function toggleFlyout(triggerElem, flyoutElem, otherFlyouts) {
-    const rect = triggerElem.getBoundingClientRect();
-    const sidebarCollapsed = document.getElementById('sidebar').classList.contains('collapsed');
-    const offsetLeft = sidebarCollapsed ? 70 : 300;
-    const type = triggerElem.dataset.flyout;
-
-    if (type === 'tender' || type === 'clearance') {
-      flyoutElem.innerHTML = getFlyoutContent(type);
-
-      setTimeout(() => {
-        const items = flyoutElem.querySelectorAll('.flyout-item');
-        items.forEach(item => {
-          item.addEventListener('click', e => {
-            e.stopPropagation();
-            showPopup();
+      // Handle add camera form submission
+      document.getElementById('addCameraForm').addEventListener('submit', function(e) {
+          e.preventDefault();
+          const form = this;
+          const errorMessage = document.getElementById('errorMessage');
+          fetch(form.action, {
+              method: 'POST',
+              body: new FormData(form),
+              headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+          })
+          .then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  window.location.reload(); // Still needed for new cameras
+              } else {
+                  errorMessage.classList.remove('d-none');
+                  errorMessage.innerText = data.error;
+              }
+          })
+          .catch(() => {
+              errorMessage.classList.remove('d-none');
+              errorMessage.innerText = 'An error occurred. Please try again.';
           });
-        });
-      }, 0);
-    }
-
-    flyoutElem.style.left = `${offsetLeft}px`;
-    flyoutElem.style.top = `${rect.top}px`;
-
-    const isVisible = flyoutElem.style.display === 'flex';
-    flyoutElem.style.display = isVisible ? 'none' : 'flex';
-
-    otherFlyouts.forEach(f => {
-      if (f !== flyoutElem) f.style.display = 'none';
-    });
-
-    // Hide submenu containers when toggling main flyout
-    submenuContainer.style.display = 'none';
-    submenuContainer2.style.display = 'none';
-  }
-
-  function showSubmenu(projectId, triggerElem) {
-    const submenus = projectSubmenus[projectId] || [];
-    
-    // If no submenus, keep container hidden and exit
-    if (submenus.length === 0) {
-      submenuContainer.style.display = 'none';
-      return;
-    }
-
-    // Populate submenu container, disabling all except "TPS 11"
-    submenuContainer.innerHTML = submenus.map(submenu => `
-      <div class="submenu-item ${submenu !== 'TPS 11' ? 'disabled-item' : ''}" data-submenu="${submenu}">
-        <i class="fas fa-file-alt"></i> ${submenu}
-      </div>
-    `).join('');
-
-    // Position submenu container to the right of flyout-project
-    const rect = triggerElem.getBoundingClientRect();
-    const flyoutRect = flyoutProject.getBoundingClientRect();
-    submenuContainer.style.left = `${flyoutRect.right + 10}px`;
-    submenuContainer.style.top = `${rect.top}px`;
-    submenuContainer.style.display = 'block';
-
-    // Hide other flyouts but keep flyout-project visible
-    flyoutTender.style.display = 'none';
-    flyoutClearance.style.display = 'none';
-  }
-
-  function showSubmenu2(triggerElem) {
-    // Populate static submenu container for TPS 11
-    submenuContainer2.innerHTML = `
-      <div class="submenu-item"><i class="fas fa-image"></i> Nandgaon</div>
-      <div class="submenu-item"><i class="fas fa-home"></i> Village 2</div>
-      <div class="submenu-item"><i class="fas fa-home"></i> Village 3</div>
-      <div class="submenu-item"><i class="fas fa-home"></i> Village 4</div>
-    `;
-
-    // Position submenu container-2 to the right of submenu-container
-    const rect = triggerElem.getBoundingClientRect();
-    const submenuRect = submenuContainer.getBoundingClientRect();
-    submenuContainer2.style.left = `${submenuRect.right + 10}px`;
-    submenuContainer2.style.top = `${rect.top}px`;
-    submenuContainer2.style.display = 'block';
-  }
-
-  document.querySelectorAll('.flyout-trigger').forEach(trigger => {
-    const flyoutType = trigger.dataset.flyout;
-    const chevron = trigger.querySelector('i.fa-chevron-right');
-    chevron.addEventListener('click', e => {
-      e.stopPropagation();
-      if (flyoutType === 'tender') {
-        toggleFlyout(trigger, flyoutTender, [flyoutClearance, flyoutProject]);
-      } else if (flyoutType === 'clearance') {
-        toggleFlyout(trigger, flyoutClearance, [flyoutTender, flyoutProject]);
-      } else if (flyoutType === 'project') {
-        toggleFlyout(trigger, flyoutProject, [flyoutTender, flyoutClearance]);
-      }
-    });
-  });
-
-  // Handle submenu triggers
-  document.querySelectorAll('.submenu-trigger').forEach(trigger => {
-    trigger.addEventListener('click', e => {
-      e.stopPropagation();
-      const projectId = trigger.dataset.projectId;
-      showSubmenu(projectId, trigger);
-    });
-
-    // Ensure project selection on .item-left click
-    const itemLeft = trigger.querySelector('.item-left');
-    itemLeft.addEventListener('click', e => {
-      e.stopPropagation();
-      const url = itemLeft.getAttribute('onclick').match(/'([^']+)'/)[1];
-      selectProject(url);
-    });
-  });
-
-  // Handle click on TPS 11 to show second submenu
-  submenuContainer.addEventListener('click', e => {
-    const submenuItem = e.target.closest('.submenu-item');
-    if (submenuItem && submenuItem.textContent.trim() === 'TPS 11') {
-      e.stopPropagation();
-      showSubmenu2(submenuItem);
-    }
-  });
-
-  // Hide flyouts and submenu containers on outside click
-  document.body.addEventListener('click', e => {
-    if (
-      !e.target.closest('.flyout-menu') &&
-      !e.target.closest('.flyout-trigger') &&
-      !e.target.closest('#submenu-container') &&
-      !e.target.closest('#submenu-container-2') &&
-      !e.target.closest('.submenu-trigger')
-    ) {
-      flyoutTender.style.display = 'none';
-      flyoutClearance.style.display = 'none';
-      flyoutProject.style.display = 'none';
-      submenuContainer.style.display = 'none';
-      submenuContainer2.style.display = 'none';
-    }
-  });
-
-  // Show popup
-  function showPopup() {
-    const overlay = document.getElementById('popup-overlay');
-    overlay.style.display = 'flex';
-    overlay.style.opacity = 0;
-    requestAnimationFrame(() => {
-      overlay.style.transition = 'opacity 0.2s ease';
-      overlay.style.opacity = 1;
-    });
-    updatePopupPosition();
-    centerPopup();
-  }
-
-  // Close popup
-  document.querySelector('.close-btn')?.addEventListener('click', () => {
-    const overlay = document.getElementById('popup-overlay');
-    overlay.style.opacity = 0;
-    setTimeout(() => {
-      overlay.style.display = 'none';
-    }, 200);
-  });
-
-  // IPCamera: Show video popup
-  function showVideoPopup() {
-    const overlay = document.getElementById('video-popup-overlay');
-    overlay.style.display = 'flex';
-    overlay.style.opacity = 0;
-    requestAnimationFrame(() => {
-      overlay.style.transition = 'opacity 0.2s ease';
-      overlay.style.opacity = 1;
-    });
-    positionVideoPopup();
-  }
-
-  // IPCamera: Close video popup
-  document.querySelector('#video-popup-overlay .close-btn')?.addEventListener('click', () => {
-    const overlay = document.getElementById('video-popup-overlay');
-    overlay.style.opacity = 0;
-    setTimeout(() => {
-      overlay.style.display = 'none';
-    }, 200);
-  });
-
-  // IPCamera: Position video popup
-  function positionVideoPopup() {
-    const overlay = document.getElementById('video-popup-overlay');
-    const sidebar = document.getElementById('sidebar');
-    const collapsed = sidebar.classList.contains('collapsed');
-    const videoPopup = document.querySelector('.video-popup');
-    videoPopup.style.marginRight = '20px'; // Ensure right-aligned with margin
-  }
-
-  // Update popup layout when sidebar changes
-  function updatePopupPosition() {
-    const overlay = document.getElementById('popup-overlay');
-    const sidebar = document.getElementById('sidebar');
-    const collapsed = sidebar.classList.contains('collapsed');
-    document.documentElement.style.setProperty('--sidebar-width', collapsed ? '70px' : '300px');
-  }
-
-  // Project selection
-  function selectProject(url) {
-    const items = document.querySelectorAll('#locked-sidebar .disabled-item');
-    items.forEach(item => {
-      item.classList.remove('disabled-item');
-    });
-    document.getElementById('locked-sidebar')?.removeAttribute('id');
-    setTimeout(() => {
-      window.location.href = url;
-    }, 150);
-  }
-
-  // Center popup
-  function centerPopup() {
-    const popup = document.querySelector('.popup');
-    const sidebar = document.getElementById('sidebar');
-    const collapsed = sidebar.classList.contains('collapsed');
-    popup.style.marginLeft = collapsed ? 'calc(50% - 500px + 115px)' : 'calc(50% - 500px)';
-  }
-
-  {% if project_selected %}
-    window.addEventListener('DOMContentLoaded', () => {
-      const items = document.querySelectorAll('#locked-sidebar .disabled-item');
-      items.forEach(item => {
-        item.classList.remove('disabled-item');
       });
-      document.getElementById('locked-sidebar')?.removeAttribute('id');
-      updateImagePosition();
-    });
-  {% else %}
-    window.addEventListener('DOMContentLoaded', () => {
-      updateImagePosition();
-    });
-  {% endif %}
-</script>
-</body>
+    </script>
+    <script>
+      // 🗺️ Initialize map if available
+      if (document.getElementById('map')) {
+        const map = L.map('map', {
+          center: [22.5937, 78.9629],
+          zoom: 5,
+          dragging: false,
+          touchZoom: false,
+          scrollWheelZoom: false,
+          doubleClickZoom: false,
+          boxZoom: false,
+          keyboard: false,
+          zoomControl: false,
+          attributionControl: false,
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        window.addEventListener('load', () => {
+          setTimeout(() => {
+            map.invalidateSize();
+            map.setView([22.5937, 78.9629], 4.5); // Ensure proper layout on load
+          }, 400);
+        });
+
+        window.map = map;
+      }
+
+      function updateImagePosition() {
+        const sidebar = document.getElementById("sidebar");
+        const image = document.getElementById("project-image");
+        const mapDiv = document.getElementById("map");
+
+        const isCollapsed = sidebar.classList.contains("collapsed");
+
+        if (image) {
+          image.style.left = isCollapsed ? "70px" : "300px";
+          image.style.width = isCollapsed ? "calc(100% - 70px)" : "calc(100% - 300px)";
+        }
+
+        if (mapDiv) {
+          mapDiv.style.left = isCollapsed ? "70px" : "300px";
+          mapDiv.style.width = isCollapsed ? "calc(100% - 300px)" : "calc(100% - 300px)";
+        }
+      }
+
+      // Sidebar toggle
+      function toggleSidebar(btn) {
+        const sidebar = document.getElementById("sidebar");
+        sidebar.classList.toggle("collapsed");
+        btn.innerHTML = sidebar.classList.contains("collapsed") ? ">" : "<";
+
+        updateImagePosition();
+
+        setTimeout(() => {
+          if (window.map) {
+            map.invalidateSize();
+            map._onResize?.();
+          }
+        }, 400);
+
+        if (document.getElementById('popup-overlay').style.display === 'flex') {
+          centerPopup();
+        }
+
+        if (document.getElementById('video-popup-overlay').style.display === 'flex') {
+          positionVideoPopup();
+        }
+
+        setTimeout(updatePopupPosition, 300);
+
+        // Hide submenu containers when sidebar toggles
+        document.getElementById('submenu-container').style.display = 'none';
+        document.getElementById('submenu-container-2').style.display = 'none';
+      }
+
+      const flyoutTender = document.getElementById('flyout-tender');
+      const flyoutClearance = document.getElementById('flyout-clearance');
+      const flyoutProject = document.getElementById('flyout-project');
+      const submenuContainer = document.getElementById('submenu-container');
+      const submenuContainer2 = document.getElementById('submenu-container-2');
+
+      // Store submenu data for each project
+      const projectSubmenus = {
+        {% for project in projects %}
+          "{{ project.project_id }}": {{ project.submenus|safe }},
+        {% endfor %}
+      };
+
+      function getFlyoutContent(type) {
+        if (type === 'tender' || type === 'clearance') {
+          return `
+            <div class="flyout-item"><i class="fas fa-folder"></i> Package A</div>
+            <div class="flyout-item"><i class="fas fa-folder"></i> Package B</div>
+            <div class="flyout-item"><i class="fas fa-folder"></i> Package C</div>
+          `;
+        }
+        return '';
+      }
+
+      function toggleFlyout(triggerElem, flyoutElem, otherFlyouts) {
+        const rect = triggerElem.getBoundingClientRect();
+        const sidebarCollapsed = document.getElementById('sidebar').classList.contains('collapsed');
+        const offsetLeft = sidebarCollapsed ? 70 : 300;
+        const type = triggerElem.dataset.flyout;
+
+        if (type === 'tender' || type === 'clearance') {
+          flyoutElem.innerHTML = getFlyoutContent(type);
+
+          setTimeout(() => {
+            const items = flyoutElem.querySelectorAll('.flyout-item');
+            items.forEach(item => {
+              item.addEventListener('click', e => {
+                e.stopPropagation();
+                showPopup();
+              });
+            });
+          }, 0);
+        }
+
+        flyoutElem.style.left = `${offsetLeft}px`;
+        flyoutElem.style.top = `${rect.top}px`;
+
+        const isVisible = flyoutElem.style.display === 'flex';
+        flyoutElem.style.display = isVisible ? 'none' : 'flex';
+
+        otherFlyouts.forEach(f => {
+          if (f !== flyoutElem) f.style.display = 'none';
+        });
+
+        // Hide submenu containers when toggling main flyout
+        submenuContainer.style.display = 'none';
+        submenuContainer2.style.display = 'none';
+      }
+
+      function showSubmenu(projectId, triggerElem) {
+        const submenus = projectSubmenus[projectId] || [];
+
+        // If no submenus, keep container hidden and exit
+        if (submenus.length === 0) {
+          submenuContainer.style.display = 'none';
+          return;
+        }
+
+        // Populate submenu container, disabling all except "TPS 11"
+        submenuContainer.innerHTML = submenus.map(submenu => `
+          <div class="submenu-item ${submenu !== 'TPS 11' ? 'disabled-item' : ''}" data-submenu="${submenu}">
+            <i class="fas fa-file-alt"></i> ${submenu}
+          </div>
+        `).join('');
+
+        // Position submenu container to the right of flyout-project
+        const rect = triggerElem.getBoundingClientRect();
+        const flyoutRect = flyoutProject.getBoundingClientRect();
+        submenuContainer.style.left = `${flyoutRect.right + 10}px`;
+        submenuContainer.style.top = `${rect.top}px`;
+        submenuContainer.style.display = 'block';
+
+        // Hide other flyouts but keep flyout-project visible
+        flyoutTender.style.display = 'none';
+        flyoutClearance.style.display = 'none';
+      }
+
+      function showSubmenu2(triggerElem) {
+        // Populate static submenu container for TPS 11
+        submenuContainer2.innerHTML = `
+          <div class="submenu-item"><i class="fas fa-image"></i> Nandgaon</div>
+          <div class="submenu-item"><i class="fas fa-home"></i> Village 2</div>
+          <div class="submenu-item"><i class="fas fa-home"></i> Village 3</div>
+          <div class="submenu-item"><i class="fas fa-home"></i> Village 4</div>
+        `;
+
+        // Position submenu container-2 to the right of submenu-container
+        const rect = triggerElem.getBoundingClientRect();
+        const submenuRect = submenuContainer.getBoundingClientRect();
+        submenuContainer2.style.left = `${submenuRect.right + 10}px`;
+        submenuContainer2.style.top = `${rect.top}px`;
+        submenuContainer2.style.display = 'block';
+      }
+
+      document.querySelectorAll('.flyout-trigger').forEach(trigger => {
+        const flyoutType = trigger.dataset.flyout;
+        const chevron = trigger.querySelector('i.fa-chevron-right');
+        chevron.addEventListener('click', e => {
+          e.stopPropagation();
+          if (flyoutType === 'tender') {
+            toggleFlyout(trigger, flyoutTender, [flyoutClearance, flyoutProject]);
+          } else if (flyoutType === 'clearance') {
+            toggleFlyout(trigger, flyoutClearance, [flyoutTender, flyoutProject]);
+          } else if (flyoutType === 'project') {
+            toggleFlyout(trigger, flyoutProject, [flyoutTender, flyoutClearance]);
+          }
+        });
+      });
+
+      // Handle submenu triggers
+      document.querySelectorAll('.submenu-trigger').forEach(trigger => {
+        trigger.addEventListener('click', e => {
+          e.stopPropagation();
+          const projectId = trigger.dataset.projectId;
+          showSubmenu(projectId, trigger);
+        });
+
+        // Ensure project selection on .item-left click
+        const itemLeft = trigger.querySelector('.item-left');
+        itemLeft.addEventListener('click', e => {
+          e.stopPropagation();
+          const url = itemLeft.getAttribute('onclick').match(/'([^']+)'/)[1];
+          selectProject(url);
+        });
+      });
+
+      // Handle click on TPS 11 to show second submenu
+      submenuContainer.addEventListener('click', e => {
+        const submenuItem = e.target.closest('.submenu-item');
+        if (submenuItem && submenuItem.textContent.trim() === 'TPS 11') {
+          e.stopPropagation();
+          showSubmenu2(submenuItem);
+        }
+      });
+
+      // Hide flyouts and submenu containers on outside click
+      document.body.addEventListener('click', e => {
+        if (
+          !e.target.closest('.flyout-menu') &&
+          !e.target.closest('.flyout-trigger') &&
+          !e.target.closest('#submenu-container') &&
+          !e.target.closest('#submenu-container-2') &&
+          !e.target.closest('.submenu-trigger')
+        ) {
+          flyoutTender.style.display = 'none';
+          flyoutClearance.style.display = 'none';
+          flyoutProject.style.display = 'none';
+          submenuContainer.style.display = 'none';
+          submenuContainer2.style.display = 'none';
+        }
+      });
+
+      // Show popup
+      function showPopup() {
+        const overlay = document.getElementById('popup-overlay');
+        overlay.style.display = 'flex';
+        overlay.style.opacity = 0;
+        requestAnimationFrame(() => {
+          overlay.style.transition = 'opacity 0.2s ease';
+          overlay.style.opacity = 1;
+        });
+        updatePopupPosition();
+        centerPopup();
+      }
+
+      // Close popup
+      document.querySelector('.close-btn')?.addEventListener('click', () => {
+        const overlay = document.getElementById('popup-overlay');
+        overlay.style.opacity = 0;
+        setTimeout(() => {
+          overlay.style.display = 'none';
+        }, 200);
+      });
+
+      // IPCamera: Show video popup
+      function showVideoPopup() {
+        const overlay = document.getElementById('video-popup-overlay');
+        overlay.style.display = 'flex';
+        overlay.style.opacity = 0;
+        requestAnimationFrame(() => {
+          overlay.style.transition = 'opacity 0.2s ease';
+          overlay.style.opacity = 1;
+        });
+        positionVideoPopup();
+      }
+
+      // IPCamera: Close video popup
+      document.querySelector('#video-popup-overlay .close-btn')?.addEventListener('click', () => {
+        const overlay = document.getElementById('video-popup-overlay');
+        overlay.style.opacity = 0;
+        setTimeout(() => {
+          overlay.style.display = 'none';
+        }, 200);
+      });
+
+      // IPCamera: Position video popup
+      function positionVideoPopup() {
+        const overlay = document.getElementById('video-popup-overlay');
+        const sidebar = document.getElementById('sidebar');
+        const collapsed = sidebar.classList.contains('collapsed');
+        const videoPopup = document.querySelector('.video-popup');
+        videoPopup.style.marginRight = '20px'; // Ensure right-aligned with margin
+      }
+
+      // Update popup layout when sidebar changes
+      function updatePopupPosition() {
+        const overlay = document.getElementById('popup-overlay');
+        const sidebar = document.getElementById('sidebar');
+        const collapsed = sidebar.classList.contains('collapsed');
+        document.documentElement.style.setProperty('--sidebar-width', collapsed ? '70px' : '300px');
+      }
+
+      // Project selection
+      function selectProject(url) {
+        const items = document.querySelectorAll('#locked-sidebar .disabled-item');
+        items.forEach(item => {
+          item.classList.remove('disabled-item');
+        });
+        document.getElementById('locked-sidebar')?.removeAttribute('id');
+        setTimeout(() => {
+          window.location.href = url;
+        }, 150);
+      }
+
+      // Center popup
+      function centerPopup() {
+        const popup = document.querySelector('.popup');
+        const sidebar = document.getElementById('sidebar');
+        const collapsed = sidebar.classList.contains('collapsed');
+        popup.style.marginLeft = collapsed ? 'calc(50% - 500px + 115px)' : 'calc(50% - 500px)';
+      }
+
+      {% if project_selected %}
+        window.addEventListener('DOMContentLoaded', () => {
+          const items = document.querySelectorAll('#locked-sidebar .disabled-item');
+          items.forEach(item => {
+            item.classList.remove('disabled-item');
+          });
+          document.getElementById('locked-sidebar')?.removeAttribute('id');
+          updateImagePosition();
+        });
+      {% else %}
+        window.addEventListener('DOMContentLoaded', () => {
+          updateImagePosition();
+        });
+      {% endif %}
+    </script>
+  </body>
 </html>

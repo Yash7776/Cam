@@ -95,26 +95,20 @@ def dashboard(request, dept_name):
 def project_detail(request, dept_name, project_id):
     department = get_object_or_404(Department, dept_name=dept_name)
     current_project = get_object_or_404(Project, project_id=project_id, department=department)
-    
     projects = Project.objects.filter(department=department)
 
-    # Ip Camera
     ipproject = get_object_or_404(Project, project_id=project_id)
-    print("IPProject",ipproject)
-    cameras = Project_ip_camera_details_all.objects.filter(project=ipproject)
-    print("CAMERASYAS",cameras)
+    cameras = Project_ip_camera_details_all.objects.filter(project=ipproject).values('camera_id', 'location_name', 'ip_link', 'status')
 
-    # Start Cameras Agin
-    from .streaming import start_ffmpeg_stream
-    start_ffmpeg_stream()
+    # from .streaming import start_ffmpeg_stream
+    # start_ffmpeg_stream()
 
-    
     context = {
         'department': department,
         'current_project': current_project,
         'projects': projects,
         'user_name': request.session.get('user_name'),
         'project_selected': True,
-        'cameras': cameras
+        'cameras': list(cameras)
     }
     return render(request, 'dashboard.html', context)

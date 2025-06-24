@@ -771,7 +771,7 @@
             ></i
             >Live Camera Feed
             <button
-              class="close-btn btn btn-danger text-right"
+              class="close-btn btn-sm btn btn-danger text-right ms-auto"
               
             >
               Close
@@ -782,7 +782,7 @@
           <div class="camera-buttons">
             {% for cam in cameras %}
             <button
-              class="btn mb-2 mr-2 text-white rounded-pill" style="background-color: #3b1a6b"
+              class="btn btn-sm mb-2 mr-2 text-white rounded-0" style="background-color: #3b1a6b"
               onclick="showCameraFeed('{{ cam.camera_id }}')"
             >
               {{ cam.location_name }}

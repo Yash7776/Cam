@@ -336,6 +336,7 @@ class Project(models.Model):
     
 class Project_ip_camera_details_all(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="cameras")  # NEWccc
+    camera_group = models.ForeignKey('CameraGroupHeaderAll', on_delete=models.SET_NULL, null=True, blank=True, related_name='cameras')
     camera_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
     location_name = models.CharField(max_length=100)
     ip_link = models.CharField(max_length=300)
@@ -368,4 +369,39 @@ class Project_ip_camera_details_all(models.Model):
     def save(self, *args, **kwargs):
         if not self.camera_id:
             self.camera_id = self.get_or_assign_camera_id(self.location_name)
+        super().save(*args, **kwargs)
+
+
+class CameraGroupHeaderAll(models.Model):
+    cagh_id = models.CharField(primary_key=True, max_length=20, blank=True)  # Changed to CharField
+    project = models.ForeignKey('Project', on_delete=models.CASCADE)
+    cagh_group_name = models.TextField(null=True, blank=True)
+    cagh_group_km = models.TextField(null=True, blank=True)
+    cagh_type = models.TextField(null=True, blank=True)  # e.g., toll, speed camera, other
+    cagh_start_gps = models.TextField(null=True, blank=True)
+    cagh_end_gps = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.cagh_group_name or 'Unnamed Group'} ({self.cagh_type})"
+
+    @classmethod
+    def get_or_assign_cagh_id(cls, group_name):
+        existing_group = cls.objects.filter(cagh_group_name=group_name).first()
+        if existing_group:
+            return existing_group.cagh_id
+        unique_id, _ = UniqueIdHeaderAll.objects.get_or_create(
+            table_name='camera_group_header_all',
+            id_for='cagh_id',
+            defaults={
+                'prefix': 'CGH',
+                'last_id': '',
+                'created_on': timezone.now(),
+                'modified_on': timezone.now()
+            }
+        )
+        return unique_id.get_next_id()
+
+    def save(self, *args, **kwargs):
+        if not self.cagh_id:
+            self.cagh_id = self.get_or_assign_cagh_id(self.cagh_group_name or 'Unnamed')
         super().save(*args, **kwargs)

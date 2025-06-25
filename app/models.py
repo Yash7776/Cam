@@ -334,7 +334,7 @@ class Project(models.Model):
         )
         return unique_id.get_next_id()
     
-class Project_ip_camera_details_all(models.Model):
+class CameraGroupDetailsAll(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="cameras")  # NEWccc
     camera_group = models.ForeignKey('CameraGroupHeaderAll', on_delete=models.SET_NULL, null=True, blank=True, related_name='cameras')
     camera_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
@@ -355,7 +355,7 @@ class Project_ip_camera_details_all(models.Model):
         if existing_camera:
             return existing_camera.camera_id
         unique_id, _ = UniqueIdHeaderAll.objects.get_or_create(
-            table_name='project_ip_camera_details_all',
+            table_name='CameraGroupDetailsAll',
             id_for='camera_id',
             defaults={
                 'prefix': 'CAM',

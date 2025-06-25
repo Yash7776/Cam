@@ -2,7 +2,7 @@ import subprocess
 import threading
 import os
 from django.utils import timezone
-from app.models import Project_ip_camera_details_all
+from app.models import CameraGroupDetailsAll
 
 def start_ffmpeg_stream():
     ffmpeg_path = "C:/ffmpeg-7.1.1-full_build/bin/ffmpeg.exe"
@@ -10,7 +10,7 @@ def start_ffmpeg_stream():
     # Ensure media directory exists
     os.makedirs(media_dir, exist_ok=True)
 
-    cameras = Project_ip_camera_details_all.objects.filter(status=1)
+    cameras = CameraGroupDetailsAll.objects.filter(status=1)
 
     for camera in cameras:
         print(camera.camera_id)

@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.contrib.auth.hashers import check_password
-from .models import Department, Project_ip_camera_details_all, User_header_all, Project
+from .models import Department, CameraGroupDetailsAll, User_header_all, Project
 import logging
 from django.http import HttpResponse
 
@@ -82,7 +82,7 @@ def dashboard(request, dept_name):
     projects = Project.objects.filter(department=department).order_by('project_name')
 
     # Ip Camera
-    # cameras = Project_ip_camera_details_all.objects.all()
+    # cameras = CameraGroupDetailsAll.objects.all()
 
 
     return render(request, 'dashboard.html', {
@@ -98,7 +98,7 @@ def project_detail(request, dept_name, project_id):
     projects = Project.objects.filter(department=department)
 
     ipproject = get_object_or_404(Project, project_id=project_id)
-    cameras = Project_ip_camera_details_all.objects.filter(project=ipproject).values('camera_id', 'location_name', 'ip_link', 'status')
+    cameras = CameraGroupDetailsAll.objects.filter(project=ipproject).values('camera_id', 'location_name', 'ip_link', 'status')
 
     # from .streaming import start_ffmpeg_stream
     # start_ffmpeg_stream()

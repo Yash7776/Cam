@@ -106,15 +106,6 @@
             color: #555;
         }
 
-
-
-
-
-        /* button */
-
-
-
-
         /* Button container for left side of map */
         .button-container {
             position: absolute;
@@ -173,168 +164,138 @@
             opacity: 0.6;
             cursor: not-allowed;
         }
-        /* ################ IP Camera Css ######################## */
+
         /* 📷 Styles for video popup overlay */
-.video-popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: none;
-  justify-content: flex-end; /* 📷 Align popup to the right */
-  align-items: center;
-  background: rgba(0, 0, 0, 0.6); /* 📷 Semi-transparent background */
-  z-index: 10001;
-  backdrop-filter: blur(3px); /* 📷 Blur effect for background */
-  transition: opacity 0.3s ease;
-}
+        .video-popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            justify-content: flex-end;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 10001;
+            backdrop-filter: blur(3px);
+            transition: opacity 0.3s ease;
+        }
 
-/* 📷 Styles for the video popup */
-.video-popup {
-  background: #ffffff;
-  padding: 32px;
-  width: 400px; /* 📷 Fixed width for the popup */
-  max-height: 80vh;
-  overflow-y: auto;
-  border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
-  font-family: 'Poppins', sans-serif;
-  transform: translateX(20px); /* 📷 Slide-in animation */
-  opacity: 0;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  position: relative;
-  margin-right: 20px; /* 📷 Right margin for alignment */
-}
+        /* 📷 Styles for the video popup */
+        .video-popup {
+            background: #ffffff;
+            padding: 32px;
+            width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border-radius: 16px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+            font-family: 'Poppins', sans-serif;
+            transform: translateX(20px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            position: relative;
+            margin-right: 20px;
+        }
 
-/* 📷 Show popup with animation when displayed */
-.video-popup-overlay[style*="display: flex"] .video-popup {
-  transform: translateX(0);
-  opacity: 1;
-}
+        /* 📷 Show popup with animation when displayed */
+        .video-popup-overlay[style*="display: flex"] .video-popup {
+            transform: translateX(0);
+            opacity: 1;
+        }
 
-/* 📷 Styles for the video element */
-.video-popup video {
-  width: 100%;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 📷 Subtle shadow for video */
-}
+        /* 📷 Styles for the video element */
+        .video-popup video {
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
 
-/* 📷 Styles for the no-feed banner */
-.no-feed-banner {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgba(0, 0, 0, 0.8); /* 📷 Dark background for visibility */
-  color: white;
-  padding: 15px;
-  border-radius: 5px;
-  text-align: center;
-  z-index: 10;
-  display: none; /* 📷 Hidden by default */
-}
+        /* 📷 Styles for the no-feed banner */
+        .no-feed-banner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            z-index: 10;
+            display: none;
+        }
 
-/* 📷 Styles for camera buttons */
-.camera-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 20px;
-}
+        /* 📷 Styles for camera buttons */
+        .camera-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
 
-/* 📷 Container for video and no-feed banner */
-.camera-feed-container {
-  position: relative;
-}
-
+        /* 📷 Container for video and no-feed banner */
+        .camera-feed-container {
+            position: relative;
+        }
     </style>
 </head>
 
 <body>
     <div id="map"></div>
 
-
-    {% if cameras %}
-    <!-- Views Button -->
+    {% if camera_groups %}
+    <!-- Views Buttons for each camera group -->
     <div class="button-container">
         <ul>
-            <!-- IPCamera: Modified Views item to trigger video popup -->
-            <li class="disabled-item video-popup-trigger">
-                <div class="item-left" onclick="showVideoPopup()">
-                    <i class="fas fa-map"></i><span class="label">Views</span>
+            {% for group in camera_groups %}
+            <li class="video-popup-trigger">
+                <div class="item-left" onclick="showVideoPopup('{{ group.cagh_id }}')">
+                    <i class="fas fa-map"></i>
+                    <span class="label">{{ group.cagh_group_name|default:"Unnamed Group" }} View</span>
                 </div>
                 <i class="fas fa-chevron-right"></i>
             </li>
+            {% endfor %}
         </ul>
     </div>
     {% endif %}
 
-<!-- ################################################################################ -->
     <!-- 📷 Video popup overlay for displaying camera feeds -->
-<div id="video-popup-overlay" class="video-popup-overlay">
-  <div class="video-popup">
-    <h3>
-      <i class="fas fa-video" style="margin-right: 8px; color: #3b1a6b"></i>Live Camera Feed
-      <!-- 📷 Close button to dismiss the video popup -->
-      <button class="close-btn btn-sm btn btn-danger text-right ms-auto">Close</button>
-    </h3>
+    <div id="video-popup-overlay" class="video-popup-overlay">
+        <div class="video-popup">
+            <h3>
+                <i class="fas fa-video" style="margin-right: 8px; color: #3b1a6b"></i>Live Camera Feed
+                <button class="close-btn btn-sm btn btn-danger text-right ms-auto">Close</button>
+            </h3>
 
-    <!-- 📷 Container for camera selection buttons -->
-    <div class="camera-buttons">
-      {% for cam in cameras %}
-      <!-- 📷 Button for each camera, triggers showCameraFeed with camera_id -->
-      <button
-        class="btn btn-sm mb-2 mr-2 text-white rounded-0" style="background-color: #3b1a6b"
-        onclick="showCameraFeed('{{ cam.camera_id }}')"
-      >
-        {{ cam.location_name }}
-      </button>
-      {% empty %}
-      <!-- 📷 Fallback message if no cameras are available -->
-      <p class="text-muted">No cameras available.</p>
-      {% endfor %}
+            <!-- 📷 Container for camera selection buttons -->
+            <div class="camera-buttons" id="camera-buttons">
+                <!-- Cameras will be populated dynamically by JavaScript -->
+            </div>
+
+            <!-- 📷 Container for the video feed and no-feed banner -->
+            <div class="camera-feed-container">
+                <video
+                    id="selectedVideo"
+                    class="card-img-top"
+                    width="100%"
+                    controls
+                    autoplay
+                    muted
+                    style="display: none"
+                ></video>
+                <div id="noFeedBanner" class="no-feed-banner" style="display: none">
+                    <div>No Feed Available</div>
+                </div>
+                <span
+                    id="statusBadge"
+                    class="badge position-absolute top-100 start-0 translate-middle m-2"
+                    style="display: none"
+                ></span>
+            </div>
+        </div>
     </div>
-
-    <!-- 📷 Container for the video feed and no-feed banner -->
-    <div class="camera-feed-container">
-      <!-- 📷 Video element for displaying the selected camera feed -->
-      <video
-        id="selectedVideo"
-        class="card-img-top"
-        width="100%"
-        controls
-        autoplay
-        muted
-        style="display: none"
-      ></video>
-      <!-- 📷 Banner displayed when no feed is available -->
-      <div id="noFeedBanner" class="no-feed-banner" style="display: none">
-        <div>No Feed Available</div>
-      </div>
-      <!-- 📷 Status badge indicating camera online/offline status -->
-      <span
-        id="statusBadge"
-        class="badge position-absolute top-100 start-0 translate-middle m-2"
-        style="display: none"
-      ></span>
-    </div>
-  </div>
-</div>
-
-
-
-    </div>
-
-
-
-
-
-
-
-
-
-
 
     <div id="overlay">
         <div class="overlay-header">
@@ -342,8 +303,7 @@
             <span class="reset-icon" onclick="resetSelections()">↻</span>
         </div>
         <div class="view-section">
-            <label><input type="radio" name="view" value="panoramic" onclick="togglePanoramicOptions()"> Panoramic
-                View</label>
+            <label><input type="radio" name="view" value="panoramic" onclick="togglePanoramicOptions()"> Panoramic View</label>
             <div id="panoramic-options">
                 <label><input type="radio" name="direction" value="mumbai"> Towards Mumbai</label>
                 <label><input type="radio" name="direction" value="nagpur"> Towards Nagpur</label>
@@ -356,161 +316,155 @@
             <label><input type="radio" name="view" value="3d" onclick="togglePanoramicOptions()"> 3D Point View</label>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest">
-        console.log("Hello")
-    </script>
+
     <script>
         // 📷 Function to display the video feed for a selected camera
-function showCameraFeed(cameraId) {
-    // 📷 Get references to video, no-feed banner, and status badge elements
-    const video = document.getElementById('selectedVideo');
-    const noFeedBanner = document.getElementById('noFeedBanner');
-    const statusBadge = document.getElementById('statusBadge');
-    // 📷 Parse cameras data from Django template (assumed to be JSON-safe)
-    const cameras = {{ cameras|safe }};
+        function showCameraFeed(cameraId) {
+            const video = document.getElementById('selectedVideo');
+            const noFeedBanner = document.getElementById('noFeedBanner');
+            const statusBadge = document.getElementById('statusBadge');
+            const cameras = {{ cameras|safe }};
 
-    // 📷 Find the camera object matching the provided cameraId
-    const selectedCam = cameras.find(cam => cam.camera_id === cameraId);
-    if (selectedCam) {
-        // 📷 Construct the HLS stream URL for the selected camera
-        const url = `/media/stream/cam_${selectedCam.camera_id}.m3u8`;
-        let hls = null; // 📷 HLS.js instance for streaming
-        let isPlaying = false; // 📷 Track whether the video is currently playing
+            const selectedCam = cameras.find(cam => cam.camera_id === cameraId);
+            if (selectedCam) {
+                const url = `/media/stream/cam_${selectedCam.camera_id}.m3u8`;
+                let hls = null;
+                let isPlaying = false;
 
-        // 📷 Clean up any existing HLS instance to prevent memory leaks
-        if (hls) {
-            hls.destroy();
-        }
+                if (hls) {
+                    hls.destroy();
+                }
 
-        // 📷 Function to load the HLS stream
-        function loadStream() {
-            if (Hls.isSupported()) {
-                // 📷 Initialize HLS.js if supported by the browser
-                hls = new Hls();
-                hls.loadSource(url);
-                hls.attachMedia(video);
-                // 📷 Attempt to play the video once media is attached
-                hls.on(Hls.Events.MEDIA_ATTACHED, () => {
-                    video.play().catch(() => {
-                        // 📷 Show no-feed banner if playback fails
-                        noFeedBanner.style.display = 'block';
-                    });
-                });
-                // 📷 Handle fatal errors by showing the no-feed banner
-                hls.on(Hls.Events.ERROR, (event, data) => {
-                    if (data.fatal) {
+                function loadStream() {
+                    if (Hls.isSupported()) {
+                        hls = new Hls();
+                        hls.loadSource(url);
+                        hls.attachMedia(video);
+                        hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+                            video.play().catch(() => {
+                                noFeedBanner.style.display = 'block';
+                            });
+                        });
+                        hls.on(Hls.Events.ERROR, (event, data) => {
+                            if (data.fatal) {
+                                noFeedBanner.style.display = 'block';
+                                isPlaying = false;
+                            }
+                        });
+                    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+                        video.src = url;
+                        video.play().catch(() => {
+                            noFeedBanner.style.display = 'block';
+                        });
+                    }
+                }
+
+                function checkVideoStatus() {
+                    if (video.readyState >= 3 && !video.paused) {
+                        noFeedBanner.style.display = 'none';
+                        isPlaying = true;
+                    } else {
                         noFeedBanner.style.display = 'block';
                         isPlaying = false;
+                        loadStream();
                     }
-                });
-            } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-                // 📷 Fallback for native HLS support (e.g., Safari)
-                video.src = url;
-                video.play().catch(() => {
-                    // 📷 Show no-feed banner if playback fails
-                    noFeedBanner.style.display = 'block';
-                });
-            }
-        }
+                }
 
-        // 📷 Function to periodically check the video's status
-        function checkVideoStatus() {
-            if (video.readyState >= 3 && !video.paused) {
-                // 📷 Hide no-feed banner if video is ready and playing
+                video.style.display = 'block';
                 noFeedBanner.style.display = 'none';
-                isPlaying = true;
+                loadStream();
+
+                statusBadge.textContent = selectedCam.status === 1 ? 'Online' : 'Offline';
+                statusBadge.className = 'badge position-absolute top-100 start-0 translate-middle m-2 ' +
+                                      (selectedCam.status === 1 ? 'bg-success' : 'bg-danger');
+                statusBadge.style.display = 'block';
+
+                video.addEventListener('playing', () => {
+                    noFeedBanner.style.display = 'none';
+                    isPlaying = true;
+                });
+                video.addEventListener('error', () => {
+                    noFeedBanner.style.display = 'block';
+                    isPlaying = false;
+                });
+                video.addEventListener('stalled', () => {
+                    noFeedBanner.style.display = 'block';
+                    isPlaying = false;
+                });
+
+                setInterval(checkVideoStatus, 3000);
             } else {
-                // 📷 Show no-feed banner if video is not ready or paused
+                video.style.display = 'none';
                 noFeedBanner.style.display = 'block';
-                isPlaying = false;
-                loadStream(); // 📷 Retry loading the stream
+                statusBadge.style.display = 'none';
             }
         }
 
-        // 📷 Initialize the video display and load the stream
-        video.style.display = 'block'; // 📷 Show the video element
-        noFeedBanner.style.display = 'none'; // 📷 Hide the no-feed banner initially
-        loadStream(); // 📷 Start loading the stream
+        // 📷 Function to show the video popup overlay and filter cameras by group
+        function showVideoPopup(groupId) {
+            const overlay = document.getElementById('video-popup-overlay');
+            const cameraButtons = document.getElementById('camera-buttons');
+            const video = document.getElementById('selectedVideo');
+            const noFeedBanner = document.getElementById('noFeedBanner');
+            const statusBadge = document.getElementById('statusBadge');
+            const cameras = {{ cameras|safe }};
+            const cameraGroups = {{ camera_groups|safe }};
 
-        // 📷 Update the status badge based on camera status
-        statusBadge.textContent = selectedCam.status === 1 ? 'Online' : 'Offline';
-        statusBadge.className = 'badge position-absolute top-100 start-0 translate-middle m-2 ' + 
-                              (selectedCam.status === 1 ? 'bg-success' : 'bg-danger');
-        statusBadge.style.display = 'block'; // 📷 Show the status badge
-
-        // 📷 Event listeners for video state changes
-        video.addEventListener('playing', () => {
-            // 📷 Hide no-feed banner when video starts playing
+            // Clear existing buttons and hide video elements
+            cameraButtons.innerHTML = '';
+            video.style.display = 'none';
             noFeedBanner.style.display = 'none';
-            isPlaying = true;
+            statusBadge.style.display = 'none';
+
+            // Filter cameras by groupId
+            const groupCameras = groupId
+                ? cameras.filter(cam => cam.camera_group__cagh_id === groupId)
+                : cameras;
+
+            // Populate camera buttons and handle no cameras case
+            if (groupCameras.length > 0) {
+                groupCameras.forEach(cam => {
+                    const button = document.createElement('button');
+                    button.className = 'btn btn-sm mb-2 mr-2 text-white rounded-0';
+                    button.style.backgroundColor = '#3b1a6b';
+                    button.textContent = cam.location_name;
+                    button.onclick = () => showCameraFeed(cam.camera_id);
+                    cameraButtons.appendChild(button);
+                });
+
+                // Automatically show the first camera feed
+                showCameraFeed(groupCameras[0].camera_id);
+            } else {
+                cameraButtons.innerHTML = '<p class="text-muted">No cameras available.</p>';
+            }
+
+            // Show the popup
+            overlay.style.display = 'flex';
+            overlay.style.opacity = 0;
+            requestAnimationFrame(() => {
+                overlay.style.transition = 'opacity 0.2s ease';
+                overlay.style.opacity = 1;
+            });
+            positionVideoPopup();
+        }
+
+        // 📷 Function to position the video popup
+        function positionVideoPopup() {
+            const overlay = document.getElementById('video-popup-overlay');
+            const videoPopup = document.querySelector('.video-popup');
+            videoPopup.style.marginRight = '20px';
+        }
+
+        // 📷 Close video popup on close button click
+        document.querySelector('#video-popup-overlay .close-btn')?.addEventListener('click', () => {
+            const overlay = document.getElementById('video-popup-overlay');
+            overlay.style.opacity = 0;
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 200);
         });
-        video.addEventListener('error', () => {
-            // 📷 Show no-feed banner on video error
-            noFeedBanner.style.display = 'block';
-            isPlaying = false;
-        });
-        video.addEventListener('stalled', () => {
-            // 📷 Show no-feed banner if video stalls
-            noFeedBanner.style.display = 'block';
-            isPlaying = false;
-        });
 
-        // 📷 Periodically check video status every 3 seconds
-        setInterval(checkVideoStatus, 3000);
-    } else {
-        // 📷 Handle case where camera is not found
-        video.style.display = 'none'; // 📷 Hide video element
-        noFeedBanner.style.display = 'block'; // 📷 Show no-feed banner
-        statusBadge.style.display = 'none'; // 📷 Hide status badge
-    }
-}
-
-// 📷 Automatically load the first camera feed when the page loads
-document.addEventListener('DOMContentLoaded', () => {
-    const cameras = {{ cameras|safe }};
-    if (cameras.length > 0) {
-        // 📷 Trigger the first camera feed if cameras are available
-        showCameraFeed(cameras[0].camera_id);
-    }
-});
-
-    </script>
-    <script>
-        // ####################################################
-
-        // 📷 Function to show the video popup overlay
-function showVideoPopup() {
-    const overlay = document.getElementById('video-popup-overlay');
-    overlay.style.display = 'flex'; // 📷 Display the overlay
-    overlay.style.opacity = 0; // 📷 Start with transparent overlay
-    requestAnimationFrame(() => {
-        overlay.style.transition = 'opacity 0.2s ease'; // 📷 Smooth fade-in
-        overlay.style.opacity = 1;
-    });
-    positionVideoPopup(); // 📷 Position the popup correctly
-}
-
-// 📷 Function to position the video popup
-function positionVideoPopup() {
-    const overlay = document.getElementById('video-popup-overlay');
-    const sidebar = document.getElementById('sidebar');
-    const collapsed = sidebar.classList.contains('collapsed');
-    const videoPopup = document.querySelector('.video-popup');
-    videoPopup.style.marginRight = '20px'; // 📷 Align popup to the right with margin
-}
-
-// 📷 Close video popup on close button click
-document.querySelector('#video-popup-overlay .close-btn')?.addEventListener('click', () => {
-    const overlay = document.getElementById('video-popup-overlay');
-    overlay.style.opacity = 0; // 📷 Fade out
-    setTimeout(() => {
-        overlay.style.display = 'none'; // 📷 Hide after fade-out
-    }, 200);
-});
-
-        // #######################################################
-        var coordinates = JSON.parse('{{ coordinates|safe }}');
-
+        // Leaflet map and other existing JavaScript
         var map = L.map('map').setView([19.663280, 75.300293], 7);
 
         var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -619,53 +573,11 @@ document.querySelector('#video-popup-overlay .close-btn')?.addEventListener('cli
             overlay.style.display = 'none';
         }
 
-        coordinates.forEach(item => {
-            if (item.kgcd_start_gps && item.kgcd_end_gps) {
-                var lat = parseFloat(item.kgcd_start_gps);
-                var lon = parseFloat(item.kgcd_end_gps);
-                if (!isNaN(lat) && !isNaN(lon)) {
-                    var marker = L.marker([lat, lon], { icon: customIcon })
-                        .addTo(map)
-                        .bindPopup(`KM: ${item.kgcd_km}`);
-
-                    marker.on('click', function () {
-                        showOverlay(item.kgcd_km);
-                    });
-
-                    marker.on('mouseover', function () {
-                        this.openPopup();
-                    });
-
-                    marker.on('mouseout', function () {
-                        this.closePopup();
-                    });
-                }
-            }
-        });
-
         map.on('click', function (e) {
             if (!e.originalEvent.target.closest('#overlay')) {
                 hideOverlay();
             }
         });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-
     </script>
 </body>
-
 </html>

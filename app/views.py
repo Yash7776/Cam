@@ -2,7 +2,7 @@ import json
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.contrib.auth.hashers import check_password
-from .models import Department, CameraGroupDetailsAll, User_header_all, Project
+from .models import CameraGroupHeaderAll, Department, CameraGroupDetailsAll, User_header_all, Project
 import logging
 from django.http import HttpResponse
 from django.views.decorators.clickjacking import xframe_options_exempt
@@ -133,9 +133,17 @@ def msrdc_map(request):
 
     # Get all cameras
     ipproject = get_object_or_404(Project, project_id='PRO-00001')
-    cameras = CameraGroupDetailsAll.objects.filter(project=ipproject).values('camera_id', 'location_name', 'ip_link', 'status')
 
+    camera_groups = CameraGroupHeaderAll.objects.filter(project=ipproject).values(
+        'cagh_id', 'cagh_group_name', 'cagh_type'
+    )
+
+    # Get all cameras with their associated group
+    cameras = CameraGroupDetailsAll.objects.filter(project=ipproject).values(
+        'camera_id', 'location_name', 'ip_link', 'status', 'camera_group__cagh_id'
+    )
 
     return render(request, 'MSRDC.html', {
+        'camera_groups': list(camera_groups),
         'cameras': list(cameras)
     })

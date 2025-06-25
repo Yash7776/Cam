@@ -358,7 +358,7 @@ class CameraGroupDetailsAll(models.Model):
             table_name='CameraGroupDetailsAll',
             id_for='camera_id',
             defaults={
-                'prefix': 'CAM',
+                'prefix': 'CGD',
                 'last_id': '',
                 'created_on': timezone.now(),
                 'modified_on': timezone.now()

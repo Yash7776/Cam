@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Msrdc</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.7.5/proj4.js"></script>
+    <script src="https://unpkg.com/proj4leaflet@1.0.2/dist/proj4leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+
+        .label {
+            font-size: 12px;
+            font-weight: bold;
+            color: black;
+            background: none;
+            border: none;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            width: 250px;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            font-family: 'Arial', sans-serif;
+        }
+
+        #overlay .overlay-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+
+        #overlay h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        #overlay .reset-icon {
+            cursor: pointer;
+            font-size: 18px;
+            color: #555;
+            transition: color 0.2s;
+        }
+
+        #overlay .reset-icon:hover {
+            color: #007bff;
+        }
+
+        #overlay .view-section {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            border: 1px solid #ececec;
+        }
+
+        #overlay .view-section label {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 14px;
+            color: #444;
+            cursor: pointer;
+        }
+
+        #overlay input[type="radio"] {
+            margin-right: 10px;
+            accent-color: #007bff;
+        }
+
+        #panoramic-options {
+            margin-left: 20px;
+            margin-top: 8px;
+            display: none;
+        }
+
+        #panoramic-options label {
+            font-size: 13px;
+            color: #555;
+        }
+
+
+
+
+
+        /* button */
+
+
+
+
+        /* Button container for left side of map */
+        .button-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            font-family: 'Arial', sans-serif;
+        }
+
+        .button-container ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .button-container li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .button-container li:hover {
+            background: #f0f0f0;
+        }
+
+        .button-container .item-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .button-container .item-left i {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .button-container .item-left .label {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .button-container .fa-chevron-right {
+            font-size: 12px;
+            color: #555;
+        }
+
+        .disabled-item {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        /* ################ IP Camera Css ######################## */
+        /* 📷 Styles for video popup overlay */
+.video-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  justify-content: flex-end; /* 📷 Align popup to the right */
+  align-items: center;
+  background: rgba(0, 0, 0, 0.6); /* 📷 Semi-transparent background */
+  z-index: 10001;
+  backdrop-filter: blur(3px); /* 📷 Blur effect for background */
+  transition: opacity 0.3s ease;
+}
+
+/* 📷 Styles for the video popup */
+.video-popup {
+  background: #ffffff;
+  padding: 32px;
+  width: 400px; /* 📷 Fixed width for the popup */
+  max-height: 80vh;
+  overflow-y: auto;
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  font-family: 'Poppins', sans-serif;
+  transform: translateX(20px); /* 📷 Slide-in animation */
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  position: relative;
+  margin-right: 20px; /* 📷 Right margin for alignment */
+}
+
+/* 📷 Show popup with animation when displayed */
+.video-popup-overlay[style*="display: flex"] .video-popup {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* 📷 Styles for the video element */
+.video-popup video {
+  width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 📷 Subtle shadow for video */
+}
+
+/* 📷 Styles for the no-feed banner */
+.no-feed-banner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.8); /* 📷 Dark background for visibility */
+  color: white;
+  padding: 15px;
+  border-radius: 5px;
+  text-align: center;
+  z-index: 10;
+  display: none; /* 📷 Hidden by default */
+}
+
+/* 📷 Styles for camera buttons */
+.camera-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+/* 📷 Container for video and no-feed banner */
+.camera-feed-container {
+  position: relative;
+}
+
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+
+
+    {% if cameras %}
+    <!-- Views Button -->
+    <div class="button-container">
+        <ul>
+            <!-- IPCamera: Modified Views item to trigger video popup -->
+            <li class="disabled-item video-popup-trigger">
+                <div class="item-left" onclick="showVideoPopup()">
+                    <i class="fas fa-map"></i><span class="label">Views</span>
+                </div>
+                <i class="fas fa-chevron-right"></i>
+            </li>
+        </ul>
+    </div>
+    {% endif %}
+
+<!-- ################################################################################ -->
+    <!-- 📷 Video popup overlay for displaying camera feeds -->
+<div id="video-popup-overlay" class="video-popup-overlay">
+  <div class="video-popup">
+    <h3>
+      <i class="fas fa-video" style="margin-right: 8px; color: #3b1a6b"></i>Live Camera Feed
+      <!-- 📷 Close button to dismiss the video popup -->
+      <button class="close-btn btn-sm btn btn-danger text-right ms-auto">Close</button>
+    </h3>
+
+    <!-- 📷 Container for camera selection buttons -->
+    <div class="camera-buttons">
+      {% for cam in cameras %}
+      <!-- 📷 Button for each camera, triggers showCameraFeed with camera_id -->
+      <button
+        class="btn btn-sm mb-2 mr-2 text-white rounded-0" style="background-color: #3b1a6b"
+        onclick="showCameraFeed('{{ cam.camera_id }}')"
+      >
+        {{ cam.location_name }}
+      </button>
+      {% empty %}
+      <!-- 📷 Fallback message if no cameras are available -->
+      <p class="text-muted">No cameras available.</p>
+      {% endfor %}
+    </div>
+
+    <!-- 📷 Container for the video feed and no-feed banner -->
+    <div class="camera-feed-container">
+      <!-- 📷 Video element for displaying the selected camera feed -->
+      <video
+        id="selectedVideo"
+        class="card-img-top"
+        width="100%"
+        controls
+        autoplay
+        muted
+        style="display: none"
+      ></video>
+      <!-- 📷 Banner displayed when no feed is available -->
+      <div id="noFeedBanner" class="no-feed-banner" style="display: none">
+        <div>No Feed Available</div>
+      </div>
+      <!-- 📷 Status badge indicating camera online/offline status -->
+      <span
+        id="statusBadge"
+        class="badge position-absolute top-100 start-0 translate-middle m-2"
+        style="display: none"
+      ></span>
+    </div>
+  </div>
+</div>
+
+
+
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <div id="overlay">
+        <div class="overlay-header">
+            <h3 id="overlay-title"></h3>
+            <span class="reset-icon" onclick="resetSelections()">↻</span>
+        </div>
+        <div class="view-section">
+            <label><input type="radio" name="view" value="panoramic" onclick="togglePanoramicOptions()"> Panoramic
+                View</label>
+            <div id="panoramic-options">
+                <label><input type="radio" name="direction" value="mumbai"> Towards Mumbai</label>
+                <label><input type="radio" name="direction" value="nagpur"> Towards Nagpur</label>
+            </div>
+        </div>
+        <div class="view-section">
+            <label><input type="radio" name="view" value="ortho" onclick="togglePanoramicOptions()"> Ortho View</label>
+        </div>
+        <div class="view-section">
+            <label><input type="radio" name="view" value="3d" onclick="togglePanoramicOptions()"> 3D Point View</label>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest">
+        console.log("Hello")
+    </script>
+    <script>
+        // 📷 Function to display the video feed for a selected camera
+function showCameraFeed(cameraId) {
+    // 📷 Get references to video, no-feed banner, and status badge elements
+    const video = document.getElementById('selectedVideo');
+    const noFeedBanner = document.getElementById('noFeedBanner');
+    const statusBadge = document.getElementById('statusBadge');
+    // 📷 Parse cameras data from Django template (assumed to be JSON-safe)
+    const cameras = {{ cameras|safe }};
+
+    // 📷 Find the camera object matching the provided cameraId
+    const selectedCam = cameras.find(cam => cam.camera_id === cameraId);
+    if (selectedCam) {
+        // 📷 Construct the HLS stream URL for the selected camera
+        const url = `/media/stream/cam_${selectedCam.camera_id}.m3u8`;
+        let hls = null; // 📷 HLS.js instance for streaming
+        let isPlaying = false; // 📷 Track whether the video is currently playing
+
+        // 📷 Clean up any existing HLS instance to prevent memory leaks
+        if (hls) {
+            hls.destroy();
+        }
+
+        // 📷 Function to load the HLS stream
+        function loadStream() {
+            if (Hls.isSupported()) {
+                // 📷 Initialize HLS.js if supported by the browser
+                hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(video);
+                // 📷 Attempt to play the video once media is attached
+                hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+                    video.play().catch(() => {
+                        // 📷 Show no-feed banner if playback fails
+                        noFeedBanner.style.display = 'block';
+                    });
+                });
+                // 📷 Handle fatal errors by showing the no-feed banner
+                hls.on(Hls.Events.ERROR, (event, data) => {
+                    if (data.fatal) {
+                        noFeedBanner.style.display = 'block';
+                        isPlaying = false;
+                    }
+                });
+            } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+                // 📷 Fallback for native HLS support (e.g., Safari)
+                video.src = url;
+                video.play().catch(() => {
+                    // 📷 Show no-feed banner if playback fails
+                    noFeedBanner.style.display = 'block';
+                });
+            }
+        }
+
+        // 📷 Function to periodically check the video's status
+        function checkVideoStatus() {
+            if (video.readyState >= 3 && !video.paused) {
+                // 📷 Hide no-feed banner if video is ready and playing
+                noFeedBanner.style.display = 'none';
+                isPlaying = true;
+            } else {
+                // 📷 Show no-feed banner if video is not ready or paused
+                noFeedBanner.style.display = 'block';
+                isPlaying = false;
+                loadStream(); // 📷 Retry loading the stream
+            }
+        }
+
+        // 📷 Initialize the video display and load the stream
+        video.style.display = 'block'; // 📷 Show the video element
+        noFeedBanner.style.display = 'none'; // 📷 Hide the no-feed banner initially
+        loadStream(); // 📷 Start loading the stream
+
+        // 📷 Update the status badge based on camera status
+        statusBadge.textContent = selectedCam.status === 1 ? 'Online' : 'Offline';
+        statusBadge.className = 'badge position-absolute top-100 start-0 translate-middle m-2 ' + 
+                              (selectedCam.status === 1 ? 'bg-success' : 'bg-danger');
+        statusBadge.style.display = 'block'; // 📷 Show the status badge
+
+        // 📷 Event listeners for video state changes
+        video.addEventListener('playing', () => {
+            // 📷 Hide no-feed banner when video starts playing
+            noFeedBanner.style.display = 'none';
+            isPlaying = true;
+        });
+        video.addEventListener('error', () => {
+            // 📷 Show no-feed banner on video error
+            noFeedBanner.style.display = 'block';
+            isPlaying = false;
+        });
+        video.addEventListener('stalled', () => {
+            // 📷 Show no-feed banner if video stalls
+            noFeedBanner.style.display = 'block';
+            isPlaying = false;
+        });
+
+        // 📷 Periodically check video status every 3 seconds
+        setInterval(checkVideoStatus, 3000);
+    } else {
+        // 📷 Handle case where camera is not found
+        video.style.display = 'none'; // 📷 Hide video element
+        noFeedBanner.style.display = 'block'; // 📷 Show no-feed banner
+        statusBadge.style.display = 'none'; // 📷 Hide status badge
+    }
+}
+
+// 📷 Automatically load the first camera feed when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    const cameras = {{ cameras|safe }};
+    if (cameras.length > 0) {
+        // 📷 Trigger the first camera feed if cameras are available
+        showCameraFeed(cameras[0].camera_id);
+    }
+});
+
+    </script>
+    <script>
+        // ####################################################
+
+        // 📷 Function to show the video popup overlay
+function showVideoPopup() {
+    const overlay = document.getElementById('video-popup-overlay');
+    overlay.style.display = 'flex'; // 📷 Display the overlay
+    overlay.style.opacity = 0; // 📷 Start with transparent overlay
+    requestAnimationFrame(() => {
+        overlay.style.transition = 'opacity 0.2s ease'; // 📷 Smooth fade-in
+        overlay.style.opacity = 1;
+    });
+    positionVideoPopup(); // 📷 Position the popup correctly
+}
+
+// 📷 Function to position the video popup
+function positionVideoPopup() {
+    const overlay = document.getElementById('video-popup-overlay');
+    const sidebar = document.getElementById('sidebar');
+    const collapsed = sidebar.classList.contains('collapsed');
+    const videoPopup = document.querySelector('.video-popup');
+    videoPopup.style.marginRight = '20px'; // 📷 Align popup to the right with margin
+}
+
+// 📷 Close video popup on close button click
+document.querySelector('#video-popup-overlay .close-btn')?.addEventListener('click', () => {
+    const overlay = document.getElementById('video-popup-overlay');
+    overlay.style.opacity = 0; // 📷 Fade out
+    setTimeout(() => {
+        overlay.style.display = 'none'; // 📷 Hide after fade-out
+    }, 200);
+});
+
+        // #######################################################
+        var coordinates = JSON.parse('{{ coordinates|safe }}');
+
+        var map = L.map('map').setView([19.663280, 75.300293], 7);
+
+        var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        });
+
+        var baseLayers = {
+            "OpenStreetMap": osm,
+            "Satellite": satellite
+        };
+        L.control.layers(baseLayers).addTo(map);
+
+        proj4.defs('EPSG:32644', '+proj=utm +zone=44 +datum=WGS84 +units=m +no_defs');
+
+        fetch('/static/geojsons/Samruddhi_Dist.geojson')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                L.geoJSON(data, {
+                    coordsToLatLng: function (coords) {
+                        var point = proj4('EPSG:32644', 'EPSG:4326', [coords[0], coords[1]]);
+                        return L.latLng(point[1], point[0]);
+                    },
+                    style: {
+                        color: '#3388ff',
+                        fillColor: 'blue',
+                        fillOpacity: 0.1,
+                        weight: 2
+                    },
+                    onEachFeature: function (feature, layer) {
+                        if (feature.properties && feature.properties.NAME) {
+                            var centroid = layer.getBounds().getCenter();
+                            L.marker(centroid, {
+                                icon: L.divIcon({
+                                    className: 'label',
+                                    html: feature.properties.NAME,
+                                    iconSize: [100, 40]
+                                })
+                            }).addTo(map);
+                        }
+                    }
+                }).addTo(map);
+            })
+            .catch(error => {
+                console.error('Error loading Samruddhi_Dist.geojson:', error);
+            });
+
+        fetch('/static/geojsons/samruddhi.geojson')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                L.geoJSON(data, {
+                    style: {
+                        color: 'red',
+                        weight: 3
+                    }
+                }).addTo(map);
+            })
+            .catch(error => {
+                console.error('Error loading samruddhi.geojson:', error);
+            });
+
+        var customIcon = L.icon({
+            iconUrl: '/static/svg_logo/marker.svg',
+            iconSize: [10, 10],
+            iconAnchor: [5, 5],
+            popupAnchor: [0, -20],
+            opacity: 0,
+            iconOpacity: 0
+        });
+
+        function togglePanoramicOptions() {
+            var panoramicView = document.querySelector('input[value="panoramic"]');
+            var panoramicOptions = document.getElementById('panoramic-options');
+            panoramicOptions.style.display = panoramicView.checked ? 'block' : 'none';
+        }
+
+        function resetSelections() {
+            document.querySelectorAll('input[name="view"]').forEach(input => input.checked = false);
+            document.querySelectorAll('input[name="direction"]').forEach(input => input.checked = false);
+            togglePanoramicOptions();
+        }
+
+        function showOverlay(km) {
+            var overlay = document.getElementById('overlay');
+            var title = document.getElementById('overlay-title');
+            title.textContent = `KM: ${km}`;
+            overlay.style.display = 'block';
+            resetSelections();
+        }
+
+        function hideOverlay() {
+            var overlay = document.getElementById('overlay');
+            overlay.style.display = 'none';
+        }
+
+        coordinates.forEach(item => {
+            if (item.kgcd_start_gps && item.kgcd_end_gps) {
+                var lat = parseFloat(item.kgcd_start_gps);
+                var lon = parseFloat(item.kgcd_end_gps);
+                if (!isNaN(lat) && !isNaN(lon)) {
+                    var marker = L.marker([lat, lon], { icon: customIcon })
+                        .addTo(map)
+                        .bindPopup(`KM: ${item.kgcd_km}`);
+
+                    marker.on('click', function () {
+                        showOverlay(item.kgcd_km);
+                    });
+
+                    marker.on('mouseover', function () {
+                        this.openPopup();
+                    });
+
+                    marker.on('mouseout', function () {
+                        this.closePopup();
+                    });
+                }
+            }
+        });
+
+        map.on('click', function (e) {
+            if (!e.originalEvent.target.closest('#overlay')) {
+                hideOverlay();
+            }
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+
+    </script>
+</body>
+
+</html>

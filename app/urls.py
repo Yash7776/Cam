@@ -7,4 +7,5 @@ urlpatterns = [
     path('login/<str:dept_name>', views.login, name="login"),
     path('dashboard/<str:dept_name>', views.dashboard, name="dashboard"),
    path('<str:dept_name>/<str:project_id>/', views.project_detail, name='project_detail'),
+   path('msrdc_map/', views.msrdc_map, name='msrdc_map'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

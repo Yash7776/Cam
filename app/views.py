@@ -1,9 +1,12 @@
+import json
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.contrib.auth.hashers import check_password
 from .models import Department, CameraGroupDetailsAll, User_header_all, Project
 import logging
 from django.http import HttpResponse
+from django.views.decorators.clickjacking import xframe_options_exempt
+
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +100,9 @@ def project_detail(request, dept_name, project_id):
     current_project = get_object_or_404(Project, project_id=project_id, department=department)
     projects = Project.objects.filter(department=department)
 
-    ipproject = get_object_or_404(Project, project_id=project_id)
+    ipproject = get_object_or_404(Project, project_id='PRO-00001')
+    print("Project ID :::",project_id)
+    print("IP Project ID :::",ipproject)
     cameras = CameraGroupDetailsAll.objects.filter(project=ipproject).values('camera_id', 'location_name', 'ip_link', 'status')
 
     # from .streaming import start_ffmpeg_stream
@@ -112,3 +117,25 @@ def project_detail(request, dept_name, project_id):
         'cameras': list(cameras)
     }
     return render(request, 'dashboard.html', context)
+
+@xframe_options_exempt
+def msrdc_map(request):
+    # Get coordinates
+    # coordinates = KmGpsCoordinateDetailsAll.objects.all().values('kgcd_km', 'kgcd_start_gps', 'kgcd_end_gps')
+    # coordinates_list = [
+    #     {
+    #         'kgcd_km': item['kgcd_km'] or '',
+    #         'kgcd_start_gps': item['kgcd_start_gps'] or '',
+    #         'kgcd_end_gps': item['kgcd_end_gps'] or ''
+    #     }
+    #     # for item in coordinates
+    # ]
+
+    # Get all cameras
+    ipproject = get_object_or_404(Project, project_id='PRO-00001')
+    cameras = CameraGroupDetailsAll.objects.filter(project=ipproject).values('camera_id', 'location_name', 'ip_link', 'status')
+
+
+    return render(request, 'MSRDC.html', {
+        'cameras': list(cameras)
+    })
